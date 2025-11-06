@@ -1,0 +1,74 @@
+The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+34The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+34The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+112Tracking Prevention blocked access to storage for <URL>.
+/~:1  The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+/~:1  The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+/~:1  The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+_app-c6f172613a9a8ce7.js:34 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+main.MWM1NDgwZmE2MQ.js:1  Deprecated API for given entry type.
+(anonymous) @ main.MWM1NDgwZmE2MQ.js:1
+_app-c6f172613a9a8ce7.js:34 [LaunchDarkly] LaunchDarkly client initialized
+attached_assets/image_1758694958460.png:1   Failed to load resource: the server responded with a status of 404 ()
+22Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'battery'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'layout-animations'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'navigation-override'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'oversized-images'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'publickey-credentials'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'speaker-selection'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'unoptimized-images'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'unsized-media'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Unrecognized feature: 'pointer-lock'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-34fde18c6a279408.js:1
+framework-34fde18c6a279408.js:1  Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-34fde18c6a279408.js:1
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'battery'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'layout-animations'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'navigation-override'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'oversized-images'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'speaker-selection'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Unrecognized feature: 'unsized-media'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.html?initialPath=%2Fauth&id=%3Arq0%3A:32  Allow attribute will take precedence over 'allowpaymentrequest'.
+601479f7-bd89-4982-9ac4-c85415bb893f-00-1jr5lnq2aa6jb.kirk.replit.dev/api/user:1   Failed to load resource: the server responded with a status of 401 (Unauthorized)
+601479f7-bd89-4982-9ac4-c85415bb893f-00-1jr5lnq2aa6jb.kirk.replit.dev/api/login:1   Failed to load resource: the server responded with a status of 401 (Unauthorized)
+601479f7-bd89-4982-9ac4-c85415bb893f-00-1jr5lnq2aa6jb.kirk.replit.dev/api/login:1   Failed to load resource: the server responded with a status of 401 (Unauthorized)

@@ -1,0 +1,155 @@
+[
+  {
+    "id": 1,
+    "position": "Board of Directors",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[2]
+  },
+  {
+    "id": 2,
+    "position": "Managing Director",
+    "icon": "../assets/usericon_male3.svg",
+    "subordinates": [3, 4, 5, 6, 7, 8]
+  },
+  {
+    "id": 3,
+    "position": "Training & Service Manager",
+    "icon": "../assets/usericon_female1.svg",
+    "subordinates":[9, 10, 11, 12, 13]
+  },
+   {
+    "id": 4,
+    "position": "Sales Manager",
+    "icon": "../assets/usericon_female1.svg",
+    "subordinates":[14, 15, 16, 17, 18, 19]
+  },
+  {
+    "id": 5,
+    "position": "Finance & Administaration Manager",
+    "icon": "../assets/usericon_female1.svg",
+    "subordinates":[20]
+  },
+  {
+    "id": 6,
+    "position": "Chief Remote Pilot{Head of Safety & Training}",
+    "icon": "../assets/usericon_female1.svg",
+    "subordinates":[24]
+  },
+  {
+    "id": 7,
+    "position": "Maintenance Controller",
+    "icon": "../assets/usericon_female1.svg",
+    "subordinates":[27]
+  },
+  {
+    "id": 8,
+    "position": "Head of Safety & Security",
+    "icon": "../assets/usericon_female1.svg"
+  },
+  {
+    "id": 9,
+    "position": "Survey Solutions executive",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 10,
+    "position": "DB Developer Applications Engineer",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 11,
+    "position": "Technical Support Executive Service Center",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 12,
+    "position": "Remote Sensing | Photogrammetrist",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 13,
+    "position": "GIS Analyst | Developer",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 14,
+    "position": "Business Development Executive",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 15,
+    "position": "Account Executive: Survey, Civil & Construction",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 16,
+    "position": "Account Executive: Natural Resources & Agriculture",
+    "icon": "../assets/usericon_male1.svg"
+  },
+   {
+    "id": 17,
+    "position": "Account Executive Infrastructure & Business",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 18,
+    "position": "Account Executive Health and Human Services",
+    "icon": "../assets/usericon_male1.svg"
+  },
+  {
+    "id": 19,
+    "position": "Account Executive Sales & Marketing",
+    "icon": "../assets/usericon_male1.svg"
+  },
+   {
+    "id": 20,
+    "position": "Accountant",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[21]
+  },
+   {
+    "id": 21,
+    "position": "Admin Assistant",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[22]
+  },
+   {
+    "id": 22,
+    "position": "IT Administrator",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[23]
+  },
+   {
+    "id": 23,
+    "position": "Office Assistant",
+    "icon": "../assets/usericon_male1.svg"
+  },
+   {
+    "id": 24,
+    "position": "Type Specialist",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[25]
+  },
+   {
+    "id": 25,
+    "position": "Remote Pilots",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[26]
+  },
+   {
+    "id": 26,
+    "position": "RPAS Observers",
+    "icon": "../assets/usericon_male1.svg"
+  },
+   {
+    "id": 27,
+    "position": "Authorized Service & Repair Center",
+    "icon": "../assets/usericon_male1.svg",
+    "subordinates":[28]
+  },
+   {
+    "id": 28,
+    "position": "In-House Maintenance",
+    "icon": "../assets/usericon_male1.svg"
+  }
+]
