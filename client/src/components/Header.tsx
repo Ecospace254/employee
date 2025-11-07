@@ -39,11 +39,11 @@ export default function Header({ }: HeaderProps) {
   };
 
   return (
-    <header className="bg-primary text-primary-foreground sticky top-0 z-50 shadow-md">
+    <header className="bg-primary dark:bg-slate-950 text-primary-foreground dark:text-white sticky top-0 z-50 shadow-md dark:shadow-slate-900">
       {/* Top bar with logo and user profile */}
-      <nav className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between border-b border-primary-border">
+      <nav className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between border-b border-primary-border dark:border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary-foreground/20 rounded flex items-center justify-center">
+          <div className="w-8 h-8 bg-primary-foreground/20 dark:bg-slate-700 rounded flex items-center justify-center">
             <span className="text-sm font-semibold">I</span>
           </div>
           <h1 className="text-base sm:text-lg font-semibold truncate" data-testid="text-company-name">
@@ -88,25 +88,25 @@ export default function Header({ }: HeaderProps) {
                   <ChevronDown className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent sideOffset={20} className="bg-popover -mr-16 w-[200px]">
+              <DropdownMenuContent sideOffset={20} className="bg-popover dark:bg-slate-800 dark:border-slate-700 -mr-16 w-[200px]">
                 <DropdownMenuItem
                   onClick={() => setIsProfileModalOpen(true)}
                   data-testid="button-profile"
-                  className="flex items-center space-x-4 text-sm cursor-pointer outline-none"
+                  className="flex items-center space-x-4 text-sm cursor-pointer outline-none dark:text-white dark:hover:bg-slate-700"
                 >
                   <User className="w-4 h-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setIsSettingsModalOpen(true)}
-                  className="flex items-center space-x-4 text-sm cursor-pointer outline-none"
+                  className="flex items-center space-x-4 text-sm cursor-pointer outline-none dark:text-white dark:hover:bg-slate-700"
                   data-testid="button-settings"
                 >
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleProfileAction("Logout")} className="text-red-600" data-testid="button-logout">
+                <DropdownMenuSeparator className="dark:bg-slate-700" />
+                <DropdownMenuItem onClick={() => handleProfileAction("Logout")} className="text-red-600 dark:text-red-400 dark:hover:bg-slate-700" data-testid="button-logout">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
@@ -132,7 +132,7 @@ export default function Header({ }: HeaderProps) {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div id="mobile-navigation" className=" border-t border-primary-border bg-primary/95 backdrop-blur-sm" role="navigation" aria-label="Mobile navigation">
+        <div id="mobile-navigation" className="border-t border-primary-border dark:border-slate-700 bg-primary/95 dark:bg-slate-900/95 backdrop-blur-sm" role="navigation" aria-label="Mobile navigation">
           <div className="px-4 py-3 space-y-1">
             {tabs.map((tab) => (
               <Link

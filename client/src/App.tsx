@@ -14,6 +14,7 @@ import Documents from "@/pages/Documents";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 function Router() {
   return (
@@ -39,12 +40,14 @@ function Router() {
 }
 
 function App() {
-  return (
+return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <Toaster />
-          <Router />
+          <ThemeProvider>
+            <Toaster />
+            <Router />
+          </ThemeProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

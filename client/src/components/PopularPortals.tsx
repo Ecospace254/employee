@@ -95,7 +95,7 @@ export default function PopularPortals() {
               }}
             >
               <Card
-                className="h-full hover-elevate cursor-pointer transition-colors"
+                className="h-full hover-elevate cursor-pointer transition-colors dark:bg-slate-800"
                 onClick={portal.onClick}
                 data-testid={`card-portal-${portal.id}`}
               >

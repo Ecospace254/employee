@@ -9,14 +9,14 @@ interface WelcomeHeroProps {
 export default function WelcomeHero({ userName }: WelcomeHeroProps) {
 
   return (
-    <div className=" lg:bg-primary bg-primary px-4 py-8 rounded-lg mb-8">
+    <div className="lg:bg-primary bg-primary dark:bg-slate-800 px-4 py-8 rounded-lg mb-8">
       <div className="items-center">
         <div className="mb-4">
-          <div className="text-sm font-semibold text-primary-foreground/80 mb-2">
+          <div className="text-sm font-semibold text-primary-foreground/80 dark:text-gray-300 mb-2">
             ECOSPACE SERVICES LIMITED
           </div>
           <motion.h1
-            className="text-3xl font-bold text-primary-foreground mb-2"
+            className="text-3xl font-bold text-primary-foreground dark:text-white mb-2"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{
@@ -27,7 +27,7 @@ export default function WelcomeHero({ userName }: WelcomeHeroProps) {
             Your onboarding journey starts here!
           </motion.h1>
           <motion.p
-            className="text-base text-primary-foreground/90 leading-relaxed"
+            className="text-base text-primary-foreground/90 dark:text-gray-200 leading-relaxed"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{

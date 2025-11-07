@@ -57,7 +57,7 @@ export default function MeetTheTeam() {
       </div>
 
       {/* Leadership Message Section */}
-      <div className="bg-primary py-8 sm:py-12 lg:py-16">
+      <div className="bg-primary dark:bg-slate-800 py-8 sm:py-12 lg:py-16">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -80,7 +80,7 @@ export default function MeetTheTeam() {
               </div>
               
               <div className="flex justify-center">
-                <Card className="h-full">
+                <Card className="h-full dark:bg-slate-800">
                   <CardContent className="p-16 text-center">
                     <Avatar className="w-32 h-32 mx-auto mb-4">
                       <AvatarFallback className="text-2xl bg-primary-foreground/10">
@@ -126,7 +126,7 @@ export default function MeetTheTeam() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {leadership.map((member) => (
-                    <Card key={member.id} className="hover-elevate transition-all duration-200" data-testid={`card-leader-${member.id}`}>
+                    <Card key={member.id} className="hover-elevate dark:bg-slate-800 transition-all duration-200" data-testid={`card-leader-${member.id}`}>
                       <CardContent className="p-6 text-center">
                         <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-background shadow-lg">
                           <AvatarImage src={member.profileImage || undefined} />
@@ -186,7 +186,7 @@ export default function MeetTheTeam() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredMembers.map((member) => (
-                  <Card key={member.id} className="hover-elevate transition-all duration-200" data-testid={`card-member-${member.id}`}>
+                  <Card key={member.id} className="hover-elevate transition-all duration-200 dark:bg-slate-800" data-testid={`card-member-${member.id}`}>
                     <CardContent className="p-6 text-center">
                       <Avatar className="w-20 h-20 mx-auto mb-4">
                         <AvatarImage src={member.profileImage || undefined} />
@@ -239,7 +239,7 @@ export default function MeetTheTeam() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Step 1 & 2 */}
-                <Card>
+                <Card className="dark:bg-slate-800">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>

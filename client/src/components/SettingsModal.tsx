@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Moon, Sun } from "lucide-react";
+import { Settings, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -10,29 +11,16 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal ({isOpen, onClose}: SettingsModalProps) {
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        // Check localStorage or system preference
-        const saved = localStorage.getItem('theme');
-        if (saved) return saved === 'dark';
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    });
-
-    useEffect(() => {
-        // Apply theme to document
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]);
+    // Use the centralized theme context - no local state needed!
+    const { theme, toggleTheme } = useTheme();
+    const isDarkMode = theme === 'dark';
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-blue-50 dark:bg-[#2c2c2c] rounded-md p-4 sm:p-6">
+            <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-blue-50 dark:bg-slate-900 rounded-md p-4 sm:p-6">
                 <DialogHeader>
                     <DialogTitle className="dark:text-white">
+                        <Settings className="inline w-5 h-5 mr-2 mb-1" />
                         Settings
                     </DialogTitle>
                 </DialogHeader>
@@ -58,7 +46,7 @@ export default function SettingsModal ({isOpen, onClose}: SettingsModalProps) {
                         <Switch
                             id="theme-toggle"
                             checked={isDarkMode}
-                            onCheckedChange={setIsDarkMode}
+                            onCheckedChange={toggleTheme}
                             aria-label="Toggle dark mode"
                         />
                     </div>

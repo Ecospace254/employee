@@ -1,6 +1,6 @@
 export default function CompanyCulture() {
   return (
-    <div className="bg-primary text-primary-foreground p-8 rounded-lg my-8">
+    <div className="bg-primary dark:bg-slate-800 text-primary-foreground p-8 rounded-lg my-8">
       <div className="max-w-4xl mx-auto text-center">
         <div className="text-sm font-medium text-primary-foreground/80 mb-2">
           LEADERSHIP & COMPANY CULTURE

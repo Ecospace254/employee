@@ -339,18 +339,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
             {/* Profile Dialog */}
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-blue-50 rounded-md p-4 sm:p-6">
+                <DialogContent className="w-[95vw] sm:w-full sm:max-w-[600px] max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-blue-50 dark:bg-slate-900 rounded-md p-4 sm:p-6">
                     <DialogHeader>
-                        <DialogTitle className="text-xl sm:text-2xl font-semibold text-primary">My Profile</DialogTitle>
+                        <DialogTitle className="text-xl sm:text-2xl font-semibold text-primary dark:text-white">My Profile</DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-4 sm:space-y-6 overflow-y-auto p-2 sm:p-4">
                         {/* Avatar/Image Section */}
-                        <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 py-3 sm:py-5 bg-primary/10 min-h-[200px] sm:min-h-[250px]">
+                        <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2 py-3 sm:py-5 bg-primary/10 dark:bg-slate-800 min-h-[200px] sm:min-h-[250px]">
                             <div className="relative space-y-1">
-                                <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-2 sm:border-4 border-background shadow-lg">
+                                <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-2 sm:border-4 border-background dark:border-slate-700 shadow-lg">
                                     <AvatarImage src={previewUrl || user.profileImage || undefined} />
-                                    <AvatarFallback className="text-2xl sm:text-3xl bg-primary/10">
+                                    <AvatarFallback className="text-2xl sm:text-3xl bg-primary/10 dark:bg-slate-700 dark:text-white">
                                         {getInitials()}
                                     </AvatarFallback>
                                 </Avatar>
@@ -365,7 +365,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <Button
                                     size="icon"
                                     variant="secondary"
-                                    className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full shadow-md w-8 h-8 sm:w-10 sm:h-10"
+                                    className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full shadow-md w-8 h-8 sm:w-10 sm:h-10 dark:bg-slate-700 dark:hover:bg-slate-600"
                                     onClick={() => document.getElementById("avatar-upload")?.click()}
                                     disabled={!isEditing}
                                     title={!isEditing ? "Click 'Edit Profile' to change photo" : "Change photo"}
@@ -374,12 +374,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 </Button>
                             </div>
                             <div className="text-center">
-                                <h2 className="text-xl sm:text-2xl font-bold capitalize">
+                                <h2 className="text-xl sm:text-2xl font-bold capitalize dark:text-white">
                                     {user.firstName} {user.lastName}
                                 </h2>
-                                <p className="text-sm sm:text-base capitalize text-muted-foreground">{user.jobTitle || user.role}</p>
+                                <p className="text-sm sm:text-base capitalize text-muted-foreground dark:text-gray-300">{user.jobTitle || user.role}</p>
                                 {user.department && (
-                                    <Badge variant="secondary" className="mt-2 text-xs sm:text-sm capitalize">
+                                    <Badge variant="secondary" className="mt-2 text-xs sm:text-sm capitalize dark:bg-slate-700 dark:text-white">
                                         {user.department}
                                     </Badge>
                                 )}
@@ -396,10 +396,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         {/* Personal Information */}
                         <Collapsible open={openPersonal} onOpenChange={setOpenPersonal}>
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg sm:text-xl text-primary font-semibold">Personal Information</h2>
+                                <h2 className="text-lg sm:text-xl text-primary dark:text-white font-semibold">Personal Information</h2>
                                 <CollapsibleTrigger asChild>
                                     <button
-                                        className="p-2 rounded-md hover:bg-primary/5"
+                                        className="p-2 rounded-md hover:bg-primary/5 dark:hover:bg-slate-700 dark:text-white"
                                         aria-label={openPersonal ? "Collapse personal information" : "Expand personal information"}
                                         title={openPersonal ? "Collapse" : "Expand"}
                                     >
@@ -412,8 +412,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         {/* First Name */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 First Name
                                             </Label>
                                             <Input
@@ -422,14 +422,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Last Name */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Last Name
                                             </Label>
                                             <Input
@@ -438,14 +438,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Job Title */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Job Title
                                             </Label>
                                             <Input
@@ -454,14 +454,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Department */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Department
                                             </Label>
                                             <Input
@@ -470,14 +470,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Birth Date */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Birth Date
                                             </Label>
                                             <Input
@@ -487,13 +487,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Gender */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">Gender</Label>
+                                            <Label className="text-sm dark:text-gray-200">Gender</Label>
                                             <Input
                                                 value={genderField}
                                                 onChange={(e) => setGenderField(e.target.value)}
@@ -501,20 +501,20 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. Male, Female, Other"
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Start Date (read-only) */}
                                         <div className="space-y-1.5 sm:space-y-2 sm:col-span-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Start Date
                                             </Label>
                                             <Input
                                                 value={user.startDate ? new Date(user.startDate).toLocaleDateString() : "Not specified"}
                                                 disabled
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
                                     </div>
@@ -525,10 +525,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         {/* Contact Information */}
                         <Collapsible open={openContact} onOpenChange={setOpenContact}>
                             <div className="flex items-center justify-between pt-3 mb-4">
-                                <h2 className="text-lg sm:text-xl text-primary font-semibold">Contact Information</h2>
+                                <h2 className="text-lg sm:text-xl text-primary dark:text-white font-semibold">Contact Information</h2>
                                 <CollapsibleTrigger asChild>
                                     <button
-                                        className="p-2 rounded-md hover:bg-primary/5"
+                                        className="p-2 rounded-md hover:bg-primary/5 dark:hover:bg-slate-700 dark:text-white"
                                         aria-label={openContact ? "Collapse contact information" : "Expand contact information"}
                                         title={openContact ? "Collapse" : "Expand"}
                                     >
@@ -541,20 +541,20 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         {/* Email (read-only) */}
                                         <div className="space-y-1.5 sm:space-y-2 sm:col-span-2">
-                                            <Label className="flex items-center gap-2 text-sm">
-                                                <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                            <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
+                                                <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Email
                                             </Label>
                                             <Input
                                                 value={user.email || "Not provided"}
                                                 disabled
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* National ID */}
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">National ID</Label>
+                                            <Label className="text-sm dark:text-gray-200">National ID</Label>
                                             <Input
                                                 value={nationalIdField}
                                                 onChange={(e) => setNationalIdField(e.target.value)}
@@ -562,14 +562,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. 12345678"
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         {/* Mobile */}
                                         <div className="space-y-1.5 sm:space-y-2">
                                             <Label className="text-sm flex items-center gap-2">
-                                                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                                                <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Mobile Number
                                             </Label>
                                             <Input
@@ -579,7 +579,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. +1 (555) 555-5555            "
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
                                     </div>
@@ -591,11 +591,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                         <Collapsible open={openEducation} onOpenChange={setOpenEducation}>
                             <div className="flex items-center justify-between pt-3 mb-3">
                                 <div>
-                                    <h2 className="text-lg sm:text-xl text-primary font-semibold">Education Information</h2>
+                                    <h2 className="text-lg sm:text-xl text-primary dark:text-white font-semibold">Education Information</h2>
                                 </div>
                                 <CollapsibleTrigger asChild>
                                     <button
-                                        className="p-2 rounded-md hover:bg-primary/5"
+                                        className="p-2 rounded-md hover:bg-primary/5 dark:hover:bg-slate-700 dark:text-white"
                                         aria-label={openEducation ? "Collapse education information" : "Expand education information"}
                                         title={openEducation ? "Collapse" : "Expand"}
                                     >
@@ -607,7 +607,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                 <div className="space-y-3 sm:space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">College/Institution</Label>
+                                            <Label className="text-sm dark:text-gray-200">College/Institution</Label>
                                             <Input
                                                 value={collegeField}
                                                 onChange={(e) => setCollegeField(e.target.value)}
@@ -615,12 +615,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. University of Example"
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">Degree</Label>
+                                            <Label className="text-sm dark:text-gray-200">Degree</Label>
                                             <Input
                                                 value={degreeField}
                                                 onChange={(e) => setDegreeField(e.target.value)}
@@ -628,12 +628,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. Bachelor's, Master's"
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         <div className="space-y-1.5 sm:space-y-2 sm:col-span-2">
-                                            <Label className="text-sm">Major/Specialization</Label>
+                                            <Label className="text-sm dark:text-gray-200">Major/Specialization</Label>
                                             <Input
                                                 value={majorField}
                                                 onChange={(e) => setMajorField(e.target.value)}
@@ -641,12 +641,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
                                                 placeholder="e.g. Computer Science"
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">Start Date</Label>
+                                            <Label className="text-sm dark:text-gray-200">Start Date</Label>
                                             <Input
                                                 type="date"
                                                 value={eduStartField}
@@ -654,12 +654,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
 
                                         <div className="space-y-1.5 sm:space-y-2">
-                                            <Label className="text-sm">End Date</Label>
+                                            <Label className="text-sm dark:text-gray-200">End Date</Label>
                                             <Input
                                                 type="date"
                                                 value={eduEndField}
@@ -667,7 +667,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                                 disabled={!isEditing}
                                                 aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
                                                 title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 text-sm sm:text-base"
+                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
                                             />
                                         </div>
                                     </div>

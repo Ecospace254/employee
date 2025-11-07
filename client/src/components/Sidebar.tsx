@@ -94,7 +94,7 @@ export default function Sidebar() {
   return (
     <div className="w-full space-y-4 lg:space-y-6">
       {/* News & Announcements */}
-      <Card>
+      <Card className="dark:bg-slate-800">
         <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-4">
           <h3 className="text-lg font-semibold" data-testid="text-news-title">News & Announcements</h3>
           <Button
@@ -136,7 +136,7 @@ export default function Sidebar() {
       </Card>
 
       {/* Upcoming Events */}
-      <Card>
+      <Card className="dark:bg-slate-800">
         <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-4">
           <h3 className="text-lg font-semibold" data-testid="text-events-title">Upcoming Events</h3>
           <Button
@@ -199,7 +199,7 @@ export default function Sidebar() {
       </Card>
 
       {/* Meet the onboarding team */}
-      <Card>
+      <Card className="dark:bg-slate-800">
         <CardHeader>
           <h3 className="text-lg font-semibold" data-testid="text-team-title">Meet the onboarding team</h3>
         </CardHeader>
@@ -226,7 +226,7 @@ export default function Sidebar() {
       </Card>
 
       {/* Quick Links */}
-      <Card>
+      <Card className="dark:bg-slate-800">
         <CardHeader>
           <h3 className="text-lg font-semibold" data-testid="text-links-title">Quick Links</h3>
         </CardHeader>

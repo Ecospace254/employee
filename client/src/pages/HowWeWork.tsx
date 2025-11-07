@@ -108,7 +108,7 @@ export default function HowWeWork() {
       </div>
 
       {/* Culture & Values Section */}
-      <div className="bg-primary text-primary-foreground">
+      <div className="bg-primary dark:bg-slate-800 text-primary-foreground">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="mb-8 text-center">
             <h2 className="text-2xl font-semibold tracking-wider uppercase text-primary-foreground/80 mb-4" data-testid="text-section-header">
@@ -133,7 +133,7 @@ export default function HowWeWork() {
                   delay: index * 0.3
                 }}
               >
-                <Card className="h-full bg-card/90">
+                <Card className="h-full bg-card/90 ">
                   <CardContent className="pt-6">
                     <div className="mb-4">
                       <value.icon className="w-10 h-10 text-primary mx-auto" />
@@ -164,7 +164,7 @@ export default function HowWeWork() {
             return (
               <Card 
                 key={index} 
-                className="hover-elevate h-full"
+                className="hover-elevate h-full dark:bg-slate-800"
                 data-testid={`card-team-${team.name.toLowerCase().replace(/\s+/g, '-')}`}
               >
                 <CardContent className="p-4 flex items-center gap-3">
@@ -197,7 +197,7 @@ export default function HowWeWork() {
                 className="hover-elevate cursor-pointer"
                 data-testid={`card-social-club-${club.title.toLowerCase().replace(/\s+/g, '-').replace(/\+/g, 'plus')}`}
               >
-                <Card className="overflow-hidden h-full">
+                <Card className="overflow-hidden h-full dark:bg-slate-800">
                   <div className="aspect-video relative overflow-hidden">
                     <img 
                       src={club.image} 

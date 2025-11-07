@@ -53,7 +53,7 @@ export default function ActionCards() {
             ease: "easeOut"
           }}
         >
-          <Card className="h-full hover-elevate">
+          <Card className="h-full hover-elevate dark:bg-slate-800">
             <CardContent className="p-0">
               <div className="h-48 overflow-hidden rounded-t-lg">
                 <img
