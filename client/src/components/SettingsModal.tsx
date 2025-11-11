@@ -2,7 +2,8 @@ import React, { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Moon, Sun } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Settings, Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
 interface SettingsModalProps {
@@ -10,9 +11,10 @@ interface SettingsModalProps {
     onClose: (open: boolean) => void;
 }
 
-export default function SettingsModal ({isOpen, onClose}: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     // Use the centralized theme context - no local state needed!
-    const { theme, toggleTheme } = useTheme();
+    const { theme, toggleTheme, setTheme } = useTheme();
+    const [activeTab, setActiveTab] = useState<"appearance" | "security" | "password">("appearance");
     const isDarkMode = theme === 'dark';
 
     return (
@@ -24,33 +26,91 @@ export default function SettingsModal ({isOpen, onClose}: SettingsModalProps) {
                         Settings
                     </DialogTitle>
                 </DialogHeader>
-
-                <div className="space-y-6 py-4">
-                    {/* Theme Toggle Section */}
-                    <div className="flex items-center justify-between space-x-4 p-4 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700">
-                        <div className="flex items-center space-x-3">
-                            {isDarkMode ? (
-                                <Moon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            ) : (
-                                <Sun className="w-5 h-5 text-yellow-600" />
-                            )}
-                            <div className="space-y-0.5">
-                                <Label htmlFor="theme-toggle" className="text-sm font-medium dark:text-white cursor-pointer">
-                                    Dark Mode
-                                </Label>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    {isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-                                </p>
-                            </div>
+                <div className="grid grid-cols-3">
+                    <aside className="col-span-1 overflow-y-auto pr-4">
+                        {/* Tab Navigation */}
+                        <div className="flex flex-col">
+                            <button
+                                className={`p-2 text-left rounded-2xl ${activeTab === "appearance" ? "bg-blue-500 text-white" : "text-gray-700"}`}
+                                onClick={() => setActiveTab("appearance")}
+                            >
+                                Appearance
+                            </button>
+                            <button
+                                className={`p-2 text-left rounded-2xl ${activeTab === "security" ? "bg-blue-500 text-white" : "text-gray-700"}`}
+                                onClick={() => setActiveTab("security")}
+                            >
+                                Security
+                            </button>
+                            <button
+                                className={`p-2 text-left rounded-2xl ${activeTab === "password" ? "bg-blue-500 text-white" : "text-gray-700"}`}
+                                onClick={() => setActiveTab("password")}
+                            >
+                                Password
+                            </button>
                         </div>
-                        <Switch
-                            id="theme-toggle"
-                            checked={isDarkMode}
-                            onCheckedChange={toggleTheme}
-                            aria-label="Toggle dark mode"
-                        />
+                    </aside>
+                    <div className="col-span-2">
+                        {/* Tab Content */}
+                        {activeTab === "appearance" && (
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="color-scheme" className="block text-sm font-medium dark:text-white mb-2">
+                                        Color Scheme
+                                    </Label>
+                                    <Select value={theme} onValueChange={(value) => setTheme(value as 'light' | 'dark')}>
+                                        <SelectTrigger className="w-full bg-white dark:bg-slate-800 dark:text-white dark:border-slate-600">
+                                            <SelectValue placeholder="Select theme" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-slate-800 dark:border-slate-700">
+                                            <SelectItem value="light" className="dark:text-white dark:hover:bg-slate-700">
+                                                <div className="flex items-center gap-2">
+                                                    <Sun className="w-4 h-4 text-yellow-600" />
+                                                    <span>Light</span>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="dark" className="dark:text-white dark:hover:bg-slate-700">
+                                                <div className="flex items-center gap-2">
+                                                    <Moon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                    <span>Dark</span>
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                        Choose your preferred color scheme for the interface
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {/* {activeTab === "security" && (
+                            <div>
+                                <Label htmlFor="two-factor-auth" className="block text-sm font-medium dark:text-white">
+                                    Two-Factor Authentication
+                                </Label>
+                                <Switch
+                                    id="two-factor-auth"
+                                    checked={false}
+                                    onCheckedChange={() => {}}
+                                    aria-label="Toggle two-factor authentication"
+                                />
+                            </div>
+                        )}
+                        {activeTab === "password" && (
+                            <div>
+                                <Label htmlFor="password" className="block text-sm font-medium dark:text-white">
+                                    Password
+                                </Label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-700"
+                                />
+                            </div>
+                        )} */}
                     </div>
                 </div>
+
             </DialogContent>
         </Dialog>
     );
