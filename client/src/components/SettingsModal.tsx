@@ -1,10 +1,13 @@
 import React, { useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings, Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useMutation } from "@tanstack/react-query";
 
 interface SettingsModalProps {
     isOpen: boolean;
@@ -16,6 +19,104 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const { theme, toggleTheme, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<"appearance" | "security" | "password">("appearance");
     const isDarkMode = theme === 'dark';
+
+    // Password change form state
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordSuccess, setPasswordSuccess] = useState("");
+
+    // Forgot password form state
+    const [forgotEmail, setForgotEmail] = useState("");
+    const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+    const [forgotPasswordMessage, setForgotPasswordMessage] = useState("");
+
+    // Change password mutation
+    const changePasswordMutation = useMutation({
+        mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+            const res = await fetch("/api/auth/change-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || "Failed to change password");
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            setPasswordSuccess("Password changed successfully!");
+            setPasswordError("");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+        },
+        onError: (error: Error) => {
+            setPasswordError(error.message);
+            setPasswordSuccess("");
+        },
+    });
+
+    // Forgot password mutation
+    const forgotPasswordMutation = useMutation({
+        mutationFn: async (email: string) => {
+            const res = await fetch("/api/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.message || "Failed to send reset email");
+            }
+            return res.json();
+        },
+        onSuccess: (data) => {
+            setForgotPasswordMessage(data.message);
+            setForgotEmail("");
+        },
+        onError: (error: Error) => {
+            setForgotPasswordMessage(error.message);
+        },
+    });
+
+    // Handle password change form submission
+    const handleChangePassword = (e: React.FormEvent) => {
+        e.preventDefault();
+        setPasswordError("");
+        setPasswordSuccess("");
+
+        // Validate passwords match
+        if (newPassword !== confirmPassword) {
+            setPasswordError("New passwords do not match");
+            return;
+        }
+
+        // Validate password length
+        if (newPassword.length < 8) {
+            setPasswordError("Password must be at least 8 characters long");
+            return;
+        }
+
+        // Submit change password request
+        changePasswordMutation.mutate({ currentPassword, newPassword });
+    };
+
+    // Handle forgot password form submission
+    const handleForgotPassword = (e: React.FormEvent) => {
+        e.preventDefault();
+        setForgotPasswordMessage("");
+        
+        if (!forgotEmail) {
+            setForgotPasswordMessage("Please enter your email address");
+            return;
+        }
+
+        forgotPasswordMutation.mutate(forgotEmail);
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -95,19 +196,139 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                                     aria-label="Toggle two-factor authentication"
                                 />
                             </div>
-                        )}
-                        {activeTab === "password" && (
-                            <div>
-                                <Label htmlFor="password" className="block text-sm font-medium dark:text-white">
-                                    Password
-                                </Label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-700"
-                                />
-                            </div>
                         )} */}
+                        {activeTab === "password" && (
+                            <div className="space-y-4">
+                                {!forgotPasswordMode ? (
+                                    // CHANGE PASSWORD FORM
+                                    <form onSubmit={handleChangePassword} className="space-y-4">
+                                        <h3 className="text-lg font-semibold dark:text-white">Change Password</h3>
+                                        
+                                        {/* Current Password */}
+                                        <div>
+                                            <Label htmlFor="current-password" className="dark:text-gray-200">
+                                                Current Password
+                                            </Label>
+                                            <Input
+                                                id="current-password"
+                                                type="password"
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                                className="mt-1 dark:bg-slate-800 dark:text-white dark:border-slate-600"
+                                                required
+                                            />
+                                        </div>
+
+                                        {/* New Password */}
+                                        <div>
+                                            <Label htmlFor="new-password" className="dark:text-gray-200">
+                                                New Password
+                                            </Label>
+                                            <Input
+                                                id="new-password"
+                                                type="password"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                className="mt-1 dark:bg-slate-800 dark:text-white dark:border-slate-600"
+                                                required
+                                                minLength={8}
+                                            />
+                                        </div>
+
+                                        {/* Confirm New Password */}
+                                        <div>
+                                            <Label htmlFor="confirm-password" className="dark:text-gray-200">
+                                                Confirm New Password
+                                            </Label>
+                                            <Input
+                                                id="confirm-password"
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                className="mt-1 dark:bg-slate-800 dark:text-white dark:border-slate-600"
+                                                required
+                                                minLength={8}
+                                            />
+                                        </div>
+
+                                        {/* Error/Success Messages */}
+                                        {passwordError && (
+                                            <p className="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
+                                        )}
+                                        {passwordSuccess && (
+                                            <p className="text-sm text-green-600 dark:text-green-400">{passwordSuccess}</p>
+                                        )}
+
+                                        {/* Submit Button */}
+                                        <Button 
+                                            type="submit" 
+                                            className="w-full"
+                                            disabled={changePasswordMutation.isPending}
+                                        >
+                                            {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+                                        </Button>
+
+                                        {/* Forgot Password Link */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setForgotPasswordMode(true)}
+                                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                            Forgot your password?
+                                        </button>
+                                    </form>
+                                ) : (
+                                    // FORGOT PASSWORD FORM
+                                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                                        <h3 className="text-lg font-semibold dark:text-white">Reset Password</h3>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            Enter your email address and we'll send you a link to reset your password.
+                                        </p>
+
+                                        {/* Email Input */}
+                                        <div>
+                                            <Label htmlFor="forgot-email" className="dark:text-gray-200">
+                                                Email Address
+                                            </Label>
+                                            <Input
+                                                id="forgot-email"
+                                                type="email"
+                                                value={forgotEmail}
+                                                onChange={(e) => setForgotEmail(e.target.value)}
+                                                className="mt-1 dark:bg-slate-800 dark:text-white dark:border-slate-600"
+                                                required
+                                            />
+                                        </div>
+
+                                        {/* Message */}
+                                        {forgotPasswordMessage && (
+                                            <p className="text-sm text-blue-600 dark:text-blue-400">{forgotPasswordMessage}</p>
+                                        )}
+
+                                        {/* Submit Button */}
+                                        <Button 
+                                            type="submit" 
+                                            className="w-full"
+                                            disabled={forgotPasswordMutation.isPending}
+                                        >
+                                            {forgotPasswordMutation.isPending ? "Sending..." : "Send Reset Link"}
+                                        </Button>
+
+                                        {/* Back to Change Password */}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setForgotPasswordMode(false);
+                                                setForgotPasswordMessage("");
+                                            }}
+                                            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                            Back to Change Password
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 

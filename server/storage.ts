@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems } from "@shared/schema";
+import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { db } from "./db";
@@ -12,6 +12,7 @@ const MemoryStore = createMemoryStore(session);
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllActiveUsers(): Promise<User[]>;
   updateUserProfileImage(userId: string, imageUrl: string): Promise<User | undefined>;
@@ -20,6 +21,13 @@ export interface IStorage {
   createChecklistItem(item: InsertChecklistItem): Promise<ChecklistItem>;
   updateChecklistItem(id: string, updates: Partial<InsertChecklistItem>): Promise<ChecklistItem | undefined>;
   deleteChecklistItem(id: string): Promise<boolean>;
+  // Password management methods
+  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  findPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  deletePasswordResetToken(token: string): Promise<void>;
+  deleteAllUserTokens(userId: string): Promise<void>;
+  updateUserPassword(userId: string, newPassword: string): Promise<void>;
+  verifyUserPassword(userId: string, password: string): Promise<boolean>;
   sessionStore: any;
 }
 
@@ -160,6 +168,110 @@ export class DatabaseStorage implements IStorage {
       .delete(checklistItems)
       .where(eq(checklistItems.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  // ============================================
+  // PASSWORD MANAGEMENT METHODS
+  // ============================================
+
+  /**
+   * Get user by email - used in forgot password flow
+   */
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    return user || undefined;
+  }
+
+  /**
+   * Create password reset token - deletes old tokens first (one per user)
+   */
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    // Delete old tokens for this user (one token per user rule)
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+    
+    // Create new token
+    const [newToken] = await db
+      .insert(passwordResetTokens)
+      .values({ userId, token, expiresAt })
+      .returning();
+    
+    return newToken;
+  }
+
+  /**
+   * Find password reset token by token string
+   */
+  async findPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token))
+      .limit(1);
+    
+    return resetToken || undefined;
+  }
+
+  /**
+   * Delete a specific password reset token
+   */
+  async deletePasswordResetToken(token: string): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.token, token));
+  }
+
+  /**
+   * Delete all password reset tokens for a user
+   */
+  async deleteAllUserTokens(userId: string): Promise<void> {
+    await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, userId));
+  }
+
+  /**
+   * Update user password - hashes password before storing
+   * NOTE: Uses scrypt (same as auth.ts) for consistency with existing system
+   */
+  async updateUserPassword(userId: string, newPassword: string): Promise<void> {
+    // Use scrypt hashing (same as registration) for consistency
+    const { scrypt, randomBytes } = await import('crypto');
+    const { promisify } = await import('util');
+    const scryptAsync = promisify(scrypt);
+    
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(newPassword, salt, 64)) as Buffer;
+    const hashedPassword = `${buf.toString("hex")}.${salt}`;
+    
+    // Update in database
+    await db
+      .update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, userId));
+  }
+
+  /**
+   * Verify user password - compares plain password with hashed version
+   * NOTE: Uses scrypt (same as auth.ts) to match existing password hashes
+   */
+  async verifyUserPassword(userId: string, password: string): Promise<boolean> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    
+    if (!user) return false;
+    
+    // Use scrypt comparison (same as auth.ts)
+    const { scrypt, timingSafeEqual } = await import('crypto');
+    const { promisify } = await import('util');
+    const scryptAsync = promisify(scrypt);
+    
+    const [hashed, salt] = user.password.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(password, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
   }
 }
 

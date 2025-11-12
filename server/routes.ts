@@ -5,6 +5,8 @@ import { setupAuth } from "./auth";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { generatePasswordResetToken, getTokenExpiry, isTokenExpired } from "./tokenUtils";
+import { sendPasswordResetEmail } from "./email";
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), "uploads", "profile-images");
@@ -243,6 +245,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // ============================================
+  // PASSWORD MANAGEMENT ROUTES
+  // ============================================
+
+  /**
+   * CHANGE PASSWORD - For logged-in users
+   * POST /api/auth/change-password
+   * Body: { currentPassword, newPassword }
+   */
+  app.post("/api/auth/change-password", async (req, res) => {
+    // Check if user is logged in
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+
+    // Validate new password length
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters long" });
+    }
+
+    try {
+      const user = req.user as any;
+
+      // Step 1: Verify current password is correct
+      const isValid = await storage.verifyUserPassword(user.id, currentPassword);
+      if (!isValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      // Step 2: Update to new password (will be hashed in storage method)
+      await storage.updateUserPassword(user.id, newPassword);
+      
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  /**
+   * FORGOT PASSWORD - Request reset link
+   * POST /api/auth/forgot-password
+   * Body: { email }
+   */
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    const { email } = req.body;
+
+    // Validate email provided
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    try {
+      // Step 1: Find user by email
+      const user = await storage.getUserByEmail(email);
+      
+      // If user doesn't exist, return clear error message
+      if (!user) {
+        return res.status(404).json({ message: "Email address not found. Please check and try again." });
+      }
+
+      // Step 2: Generate secure random token
+      const resetToken = generatePasswordResetToken();
+      
+      // Step 3: Calculate expiry time (10 minutes from now)
+      const expiresAt = getTokenExpiry();
+
+      // Step 4: Save token to database (deletes old tokens automatically)
+      await storage.createPasswordResetToken(user.id, resetToken, expiresAt);
+
+      // Step 5: Send email with reset link
+      try {
+        await sendPasswordResetEmail(user.email, resetToken, user.firstName || "User");
+        res.json({ message: "Password reset link has been sent to your email address. Please check your inbox." });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        // Email failed but token is saved, so user could still reset if we had the link
+        res.status(500).json({ 
+          message: "Email service is not configured. Please contact your administrator or try the 'Change Password' option if you're logged in." 
+        });
+      }
+    } catch (error) {
+      console.error("Error in forgot password:", error);
+      res.status(500).json({ message: "Failed to process password reset request. Please try again later." });
+    }
+  });
+
+  /**
+   * RESET PASSWORD - Use token from email to set new password
+   * POST /api/auth/reset-password
+   * Body: { token, newPassword }
+   */
+  app.post("/api/auth/reset-password", async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    // Validate required fields
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required" });
+    }
+
+    // Validate password length
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters long" });
+    }
+
+    try {
+      // Step 1: Find token in database
+      const resetToken = await storage.findPasswordResetToken(token);
+
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Step 2: Check if token is expired (older than 10 minutes)
+      if (isTokenExpired(resetToken.expiresAt)) {
+        // Delete expired token
+        await storage.deletePasswordResetToken(token);
+        return res.status(400).json({ message: "Reset token has expired. Please request a new one." });
+      }
+
+      // Step 3: Update user password (will be hashed in storage method)
+      await storage.updateUserPassword(resetToken.userId, newPassword);
+
+      // Step 4: Delete the used token (one-time use)
+      await storage.deletePasswordResetToken(token);
+
+      res.json({ message: "Password reset successfully. You can now login with your new password." });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
     }
   });
 

@@ -95,6 +95,18 @@ export const teamIntroductions = pgTable("team_introductions", {
   isApproved: boolean("is_approved").default(false),
 });
 
+// Password reset tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade'}). notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
+
+
 export const insertUserSchema = createInsertSchema(users, {
   // Transform nullable fields to empty strings for form compatibility
   email: z.string().min(1, "Email is required"),
@@ -168,6 +180,11 @@ export const insertResourceSchema = createInsertSchema(resources).omit({
   id: true,
 });
 
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type PublicUser = Omit<User, 'password'>;
@@ -183,3 +200,5 @@ export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Resource = typeof resources.$inferSelect;
 export type InsertResource = z.infer<typeof insertResourceSchema>;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
