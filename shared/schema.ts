@@ -51,9 +51,19 @@ export const announcements = pgTable("announcements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  author: text("author").notNull(),
+  imageUrl: text("image_url"), // Image for the news post
+  authorId: varchar("author_id").references(() => users.id).notNull(), // Reference to user who posted
+  viewCount: integer("view_count").default(0), // Track how many people viewed
   publishedAt: timestamp("published_at").default(sql`now()`),
   targetRole: text("target_role"),
+});
+
+// Saved announcements - many-to-many relationship between users and announcements
+export const savedAnnouncements = pgTable("saved_announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  announcementId: varchar("announcement_id").references(() => announcements.id, { onDelete: 'cascade' }).notNull(),
+  savedAt: timestamp("saved_at").defaultNow().notNull(),
 });
 
 export const events = pgTable("events", {
@@ -166,6 +176,12 @@ export const insertChecklistItemSchema = createInsertSchema(checklistItems).omit
 export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
   id: true,
   publishedAt: true,
+  viewCount: true, // Auto-managed by system
+});
+
+export const insertSavedAnnouncementSchema = createInsertSchema(savedAnnouncements).omit({
+  id: true,
+  savedAt: true,
 });
 
 export const insertEventSchema = createInsertSchema(events).omit({
@@ -202,3 +218,5 @@ export type Resource = typeof resources.$inferSelect;
 export type InsertResource = z.infer<typeof insertResourceSchema>;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+export type SavedAnnouncement = typeof savedAnnouncements.$inferSelect;
+export type InsertSavedAnnouncement = z.infer<typeof insertSavedAnnouncementSchema>;

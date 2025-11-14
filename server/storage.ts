@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken } from "@shared/schema";
+import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken, type Announcement, type InsertAnnouncement, announcements, type SavedAnnouncement, savedAnnouncements } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -28,6 +28,14 @@ export interface IStorage {
   deleteAllUserTokens(userId: string): Promise<void>;
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
   verifyUserPassword(userId: string, password: string): Promise<boolean>;
+  // Announcement methods
+  getAllAnnouncements(): Promise<(Announcement & { author: User })[]>;
+  createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  incrementAnnouncementViews(id: string): Promise<void>;
+  saveAnnouncement(userId: string, announcementId: string): Promise<SavedAnnouncement>;
+  unsaveAnnouncement(userId: string, announcementId: string): Promise<boolean>;
+  isAnnouncementSaved(userId: string, announcementId: string): Promise<boolean>;
+  getSavedAnnouncements(userId: string): Promise<string[]>;
   sessionStore: any;
 }
 
@@ -272,6 +280,104 @@ export class DatabaseStorage implements IStorage {
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(password, salt, 64)) as Buffer;
     return timingSafeEqual(hashedBuf, suppliedBuf);
+  }
+
+  // ============================================
+  // ANNOUNCEMENT METHODS
+  // ============================================
+
+  /**
+   * Get all announcements with author information
+   * Joins with users table to get author details (name, image)
+   */
+  async getAllAnnouncements(): Promise<(Announcement & { author: User })[]> {
+    const result = await db
+      .select()
+      .from(announcements)
+      .leftJoin(users, eq(announcements.authorId, users.id))
+      .orderBy(desc(announcements.publishedAt));
+
+    return result.map((row) => ({
+      ...row.announcements,
+      author: row.users!,
+    }));
+  }
+
+  /**
+   * Create a new announcement
+   */
+  async createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+    const [newAnnouncement] = await db
+      .insert(announcements)
+      .values(announcement)
+      .returning();
+    return newAnnouncement;
+  }
+
+  /**
+   * Increment view count for an announcement
+   * Called when a user views the announcement details
+   */
+  async incrementAnnouncementViews(id: string): Promise<void> {
+    await db
+      .update(announcements)
+      .set({ viewCount: sql`${announcements.viewCount} + 1` })
+      .where(eq(announcements.id, id));
+  }
+
+  /**
+   * Save an announcement for a user
+   */
+  async saveAnnouncement(userId: string, announcementId: string): Promise<SavedAnnouncement> {
+    const [saved] = await db
+      .insert(savedAnnouncements)
+      .values({ userId, announcementId })
+      .returning();
+    return saved;
+  }
+
+  /**
+   * Unsave an announcement for a user
+   */
+  async unsaveAnnouncement(userId: string, announcementId: string): Promise<boolean> {
+    const result = await db
+      .delete(savedAnnouncements)
+      .where(
+        and(
+          eq(savedAnnouncements.userId, userId),
+          eq(savedAnnouncements.announcementId, announcementId)
+        )
+      );
+    return (result.rowCount || 0) > 0;
+  }
+
+  /**
+   * Check if an announcement is saved by a user
+   */
+  async isAnnouncementSaved(userId: string, announcementId: string): Promise<boolean> {
+    const [saved] = await db
+      .select()
+      .from(savedAnnouncements)
+      .where(
+        and(
+          eq(savedAnnouncements.userId, userId),
+          eq(savedAnnouncements.announcementId, announcementId)
+        )
+      )
+      .limit(1);
+    return !!saved;
+  }
+
+  /**
+   * Get all saved announcement IDs for a user
+   * Returns array of announcement IDs
+   */
+  async getSavedAnnouncements(userId: string): Promise<string[]> {
+    const saved = await db
+      .select({ announcementId: savedAnnouncements.announcementId })
+      .from(savedAnnouncements)
+      .where(eq(savedAnnouncements.userId, userId));
+    return saved.map((s) => s.announcementId);
   }
 }
 

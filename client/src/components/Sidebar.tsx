@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +10,7 @@ import managerImage from "@assets/generated_images/Marketing_manager_headshot_78
 import directorImage from "@assets/generated_images/Director_professional_headshot_35910231.png";
 
 export default function Sidebar() {
+  const [, setLocation] = useLocation();
   const [news] = useState([
     {
       id: "1",
@@ -98,7 +100,7 @@ export default function Sidebar() {
         <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-4">
           <h3 className="text-lg font-semibold" data-testid="text-news-title">News & Announcements</h3>
           <Button
-            onClick={handleAddNews}
+            onClick={() => setLocation("/news-announcements")}
             variant="ghost"
             size="sm"
             className="h-auto p-1 text-primary text-sm"

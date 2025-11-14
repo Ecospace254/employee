@@ -388,11 +388,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // put application routes here
-  // prefix all routes with /api
+  // ============================================
+  // ANNOUNCEMENT ROUTES
+  // ============================================
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+  /**
+   * GET all announcements with author info
+   */
+  app.get("/api/announcements", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const announcements = await storage.getAllAnnouncements();
+      const user = req.user as any;
+      
+      // Get saved announcements for current user
+      const savedIds = await storage.getSavedAnnouncements(user.id);
+      
+      // Add isSaved flag to each announcement
+      const announcementsWithSaved = announcements.map(announcement => ({
+        ...announcement,
+        isSaved: savedIds.includes(announcement.id)
+      }));
+      
+      res.json(announcementsWithSaved);
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+      res.status(500).json({ error: "Failed to fetch announcements" });
+    }
+  });
+
+  /**
+   * CREATE new announcement with image upload
+   */
+  app.post("/api/announcements", upload.single('image'), async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const { title, content } = req.body;
+
+      if (!title || !content) {
+        return res.status(400).json({ error: "Title and content are required" });
+      }
+
+      // Get image URL if uploaded
+      const imageUrl = req.file ? `/uploads/profile-images/${req.file.filename}` : null;
+
+      const newAnnouncement = await storage.createAnnouncement({
+        title,
+        content,
+        imageUrl,
+        authorId: user.id,
+        targetRole: null
+      });
+
+      res.status(201).json(newAnnouncement);
+    } catch (error) {
+      console.error("Error creating announcement:", error);
+      res.status(500).json({ error: "Failed to create announcement" });
+    }
+  });
+
+  /**
+   * INCREMENT view count for an announcement
+   */
+  app.post("/api/announcements/:id/view", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      await storage.incrementAnnouncementViews(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error incrementing views:", error);
+      res.status(500).json({ error: "Failed to increment views" });
+    }
+  });
+
+  /**
+   * SAVE announcement for user
+   */
+  app.post("/api/announcements/:id/save", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      await storage.saveAnnouncement(user.id, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error saving announcement:", error);
+      res.status(500).json({ error: "Failed to save announcement" });
+    }
+  });
+
+  /**
+   * UNSAVE announcement for user
+   */
+  app.delete("/api/announcements/:id/save", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      await storage.unsaveAnnouncement(user.id, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unsaving announcement:", error);
+      res.status(500).json({ error: "Failed to unsave announcement" });
+    }
+  });
 
   const httpServer = createServer(app);
 
