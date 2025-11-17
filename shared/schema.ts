@@ -51,7 +51,8 @@ export const announcements = pgTable("announcements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  imageUrl: text("image_url"), // Image for the news post
+  imageUrl: text("image_url"), // Uploaded image URL
+  mediaLink: text("media_link"), // External link (YouTube, blog, etc.)
   authorId: varchar("author_id").references(() => users.id).notNull(), // Reference to user who posted
   viewCount: integer("view_count").default(0), // Track how many people viewed
   publishedAt: timestamp("published_at").default(sql`now()`),

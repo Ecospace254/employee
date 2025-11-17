@@ -421,7 +421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   /**
-   * CREATE new announcement with image upload
+   * CREATE new announcement with image upload OR media link
    */
   app.post("/api/announcements", upload.single('image'), async (req, res) => {
     if (!req.isAuthenticated()) {
@@ -430,19 +430,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const user = req.user as any;
-      const { title, content } = req.body;
+      const { title, content, mediaLink } = req.body;
 
       if (!title || !content) {
         return res.status(400).json({ error: "Title and content are required" });
       }
 
-      // Get image URL if uploaded
+      // Get image URL if uploaded (from multer)
       const imageUrl = req.file ? `/uploads/profile-images/${req.file.filename}` : null;
+
+      // User can provide EITHER an image OR a link (not both required)
+      // But at least one should be provided for better UX
+      const finalMediaLink = mediaLink || null;
 
       const newAnnouncement = await storage.createAnnouncement({
         title,
         content,
         imageUrl,
+        mediaLink: finalMediaLink,
         authorId: user.id,
         targetRole: null
       });

@@ -4,11 +4,55 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Search, Eye, Bookmark, BookmarkCheck, Calendar, ImageIcon, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Search, Eye, Bookmark, BookmarkCheck, Calendar, Link2, ImageIcon, X } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import CreateAnnouncementModal from "@/components/CreateAnnouncementModal";
+
+// ============================================
+// HELPER FUNCTION: Extract YouTube Video ID from URL
+// ============================================
+const getYouTubeVideoId = (url: string): string | null => {
+  if (!url) return null;
+
+  // Match YouTube URLs: youtube.com/watch?v=... or youtu.be/...
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+
+  return (match && match[2].length === 11) ? match[2] : null;
+};
+
+// ============================================
+// HELPER FUNCTION: Get YouTube Thumbnail URL
+// ============================================
+const getYouTubeThumbnail = (url: string): string | null => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return null;
+
+  // Use YouTube's high quality thumbnail
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+};
+
+// ============================================
+// HELPER FUNCTION: Get YouTube Embed URL
+// ============================================
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  const videoId = getYouTubeVideoId(url);
+  if (!videoId) return null;
+
+  return `https://www.youtube.com/embed/${videoId}`;
+};
+
+// ============================================
+// HELPER FUNCTION: Check if URL is YouTube
+// ============================================
+const isYouTubeUrl = (url: string): boolean => {
+  if (!url) return false;
+  return url.includes('youtube.com') || url.includes('youtu.be');
+};
 
 // Types for our announcement data
 type Announcement = {
@@ -16,6 +60,7 @@ type Announcement = {
   title: string;
   content: string;
   imageUrl: string | null;
+  mediaLink: string | null; // External link (YouTube, blog, etc.)
   authorId: string;
   viewCount: number;
   publishedAt: string;
@@ -39,8 +84,10 @@ export default function NewsAnnouncement() {
   const [newPost, setNewPost] = useState({
     title: "",
     content: "",
+    mediaType: "image" as "image" | "link", // User choice: upload image OR paste link
     image: null as File | null,
-    imagePreview: null as string | null
+    imagePreview: null as string | null,
+    mediaLink: "" // URL for video, blog, article, etc.
   });
 
   // ============================================
@@ -71,11 +118,11 @@ export default function NewsAnnouncement() {
     onSuccess: () => {
       // Refresh announcements list
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
-      
+
       // Close modal and reset form
       setIsCreateModalOpen(false);
-      setNewPost({ title: "", content: "", image: null, imagePreview: null });
-      
+      setNewPost({ title: "", content: "", mediaType: "image", image: null, imagePreview: null, mediaLink: "" });
+
       toast({
         title: "Success!",
         description: "Your announcement has been posted.",
@@ -183,12 +230,35 @@ export default function NewsAnnouncement() {
       return;
     }
 
+    // Validate media: either image OR link must be provided
+    if (newPost.mediaType === "image" && !newPost.image) {
+      toast({
+        title: "Error",
+        description: "Please upload an image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPost.mediaType === "link" && !newPost.mediaLink.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a media link",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create FormData for multipart/form-data upload
     const formData = new FormData();
     formData.append("title", newPost.title);
     formData.append("content", newPost.content);
-    if (newPost.image) {
+
+    // Add media based on type
+    if (newPost.mediaType === "image" && newPost.image) {
       formData.append("image", newPost.image);
+    } else if (newPost.mediaType === "link") {
+      formData.append("mediaLink", newPost.mediaLink);
     }
 
     createAnnouncementMutation.mutate(formData);
@@ -213,47 +283,33 @@ export default function NewsAnnouncement() {
 
     if (diffInHours < 1) return "Just now";
     if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    
+
     return date.toLocaleDateString();
   };
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* ============================================ */}
-      {/* HEADER SECTION */}
-      {/* ============================================ */}
+      {/* HEADER SECTION - Title, Search, and Button on same row (desktop) */}
       <div className="mb-8">
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            News & Announcements
-          </h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Stay updated with the latest company news and announcements
-          </p>
-        </div>
-
-        {/* Search Bar and Create Button - Same row on desktop, stacked on mobile */}
-        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-          {/* Search Bar */}
-          <div className="flex-1 sm:max-w-md relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search news and announcements..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 w-full"
-            />
+        {/* Desktop: All in one row | Mobile: Stacked in column */}
+        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 lg:gap-6">
+          {/* Page Title */}
+          <div className="lg:flex-shrink-0">
+            <h1 className="text-3xl font-bold text-primary whitespace-nowrap">
+              News & Announcements
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Stay updated with the latest company news and announcements
+            </p>
           </div>
 
           {/* Create New Post Button - Opens Modal */}
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button variant="default" className="gap-2 whitespace-nowrap">
+              <Button variant="default" className="gap-2 whitespace-nowrap lg:flex-shrink-0">
                 <Plus className="w-4 h-4" />
                 Create New Post
               </Button>
@@ -268,41 +324,144 @@ export default function NewsAnnouncement() {
               </DialogHeader>
 
               <form onSubmit={handleCreatePost} className="space-y-6">
-                {/* Image Upload Section */}
+                {/* ============================================ */}
+                {/* MEDIA SECTION: Image Upload OR Link */}
+                {/* ============================================ */}
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-primary">
-                    Image (Optional)
+                  <label className="block text-sm font-medium mb-3 text-primary">
+                    Media (Choose one option)
                   </label>
-                  {newPost.imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={newPost.imagePreview}
-                        alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2"
-                        onClick={removeImage}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                      <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
-                      <span className="text-sm text-gray-500">Click to upload image</span>
-                      <span className="text-xs text-gray-400 mt-1">Max size: 5MB</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleImageChange}
-                      />
-                    </label>
-                  )}
+
+                  <Tabs
+                    value={newPost.mediaType}
+                    onValueChange={(value) => setNewPost({
+                      ...newPost,
+                      mediaType: value as "image" | "link",
+                      // Clear opposite field when switching tabs
+                      image: value === "link" ? null : newPost.image,
+                      imagePreview: value === "link" ? null : newPost.imagePreview,
+                      mediaLink: value === "image" ? "" : newPost.mediaLink
+                    })}
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="image" className="gap-2">
+                        <ImageIcon className="w-4 h-4" />
+                        Upload Image
+                      </TabsTrigger>
+                      <TabsTrigger value="link" className="gap-2">
+                        <Link2 className="w-4 h-4" />
+                        Paste Link
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* TAB 1: Upload Image */}
+                    <TabsContent value="image" className="mt-4">
+                      {newPost.imagePreview ? (
+                        <div className="relative">
+                          <img
+                            src={newPost.imagePreview}
+                            alt="Preview"
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2"
+                            onClick={removeImage}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <ImageIcon className="w-12 h-12 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Click to upload image</span>
+                          <span className="text-xs text-gray-400 mt-1">JPG, PNG, GIF, WEBP - Max 5MB</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                      )}
+                    </TabsContent>
+
+                    {/* TAB 2: Paste Link */}
+                    <TabsContent value="link" className="mt-4">
+                      <div className="space-y-3">
+                        <Input
+                          type="url"
+                          placeholder="https://youtube.com/watch?v=..."
+                          value={newPost.mediaLink}
+                          onChange={(e) => setNewPost({ ...newPost, mediaLink: e.target.value })}
+                          className="w-full"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          📹 Paste a link to: YouTube video, Vimeo, blog article, news site, or any external resource
+                        </p>
+
+                        {/* Preview Link - Show YouTube Thumbnail or Generic Link */}
+                        {newPost.mediaLink && (
+                          <div className="border rounded-lg overflow-hidden">
+                            {isYouTubeUrl(newPost.mediaLink) ? (
+                              // YouTube Video Preview
+                              <div className="space-y-2">
+                                <div className="relative w-full h-48 bg-black">
+                                  <img
+                                    src={getYouTubeThumbnail(newPost.mediaLink) || ''}
+                                    alt="YouTube Thumbnail"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      // Fallback if thumbnail fails to load
+                                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23000" width="100" height="100"/%3E%3C/svg%3E';
+                                    }}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z" />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="p-3 bg-gray-50 dark:bg-gray-800">
+                                  <p className="text-xs font-medium text-primary mb-1">YouTube Video</p>
+                                  <a
+                                    href={newPost.mediaLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                  >
+                                    {newPost.mediaLink}
+                                  </a>
+                                </div>
+                              </div>
+                            ) : (
+                              // Generic Link Preview
+                              <div className="p-3 bg-gray-50 dark:bg-gray-800">
+                                <div className="flex items-start gap-3">
+                                  <Link2 className="w-10 h-10 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-primary mb-1">External Link</p>
+                                    <a
+                                      href={newPost.mediaLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                    >
+                                      {newPost.mediaLink}
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
 
                 {/* Title Input */}
@@ -373,6 +532,21 @@ export default function NewsAnnouncement() {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Search Bar - Grows to fill available space */}
+        <div className="mt-2 sm:mt-4">
+          <div className="flex relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search news and announcements..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 w-full"
+            />
+          </div>
+        </div>
+
       </div>
 
       {/* ============================================ */}
@@ -388,8 +562,9 @@ export default function NewsAnnouncement() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredAnnouncements.map((announcement) => (
             <Card key={announcement.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-              {/* News Image (if exists) */}
-              {announcement.imageUrl && (
+              {/* Media Section: Show Image, YouTube Embed, or Link Preview */}
+              {announcement.imageUrl ? (
+                // Display uploaded image
                 <div className="w-full h-48 overflow-hidden">
                   <img
                     src={announcement.imageUrl}
@@ -397,7 +572,37 @@ export default function NewsAnnouncement() {
                     className="w-full h-full object-cover"
                   />
                 </div>
-              )}
+              ) : announcement.mediaLink && isYouTubeUrl(announcement.mediaLink) ? (
+                // Display YouTube video embed - Full height with proper scaling
+                <div className="w-full h-48 relative bg-black overflow-hidden">
+                  <iframe
+                    src={getYouTubeEmbedUrl(announcement.mediaLink) || ''}
+                    title={announcement.title}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-full h-full"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              ) : announcement.mediaLink ? (
+                // Display link preview with icon for non-YouTube links - Full height
+                <a
+                  href={announcement.mediaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 flex flex-col items-center justify-center p-6 border-b hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/30 dark:hover:to-indigo-900/30 transition-colors group"
+                >
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <Link2 className="w-16 h-16 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                    <div className="text-center space-y-1">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">External Resource</p>
+                      <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:underline">
+                        {new URL(announcement.mediaLink).hostname}
+                      </p>
+                    </div>
+                  </div>
+                </a>
+              ) : null}
 
               <CardHeader className="flex-1">
                 {/* Title */}

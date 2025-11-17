@@ -6,28 +6,56 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar } from "lucide-react";
 import { SiLinkedin, SiFacebook } from "react-icons/si";
+import { useQuery } from "@tanstack/react-query";
 import managerImage from "@assets/generated_images/Marketing_manager_headshot_78fdbb6a.png";
 import directorImage from "@assets/generated_images/Director_professional_headshot_35910231.png";
+import CreateAnnouncementModal from "@/components/CreateAnnouncementModal";
+
+// Type for announcement from API
+type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  mediaLink: string | null;
+  authorId: string;
+  viewCount: number;
+  publishedAt: string;
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImage: string | null;
+  };
+};
+
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+
+  if (diffInHours < 1) return "Just now";
+  if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  
+  return date.toLocaleDateString();
+};
 
 export default function Sidebar() {
   const [, setLocation] = useLocation();
-  const [news] = useState([
-    {
-      id: "1",
-      title: "Create a news post",
-      description: "Keep your audience...",
-      author: "now",
-      isAction: true
-    },
-    {
-      id: "2",
-      title: "Keep your team updated with news...",
-      description: "From the site home pag...",
-      author: "SharePoint",
-      time: "22 minutes ago",
-      isAction: false
-    }
-  ]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Fetch announcements from API
+  const { data: announcements = [] } = useQuery<Announcement[]>({
+    queryKey: ["/api/announcements"],
+  });
+
+  // Get the latest announcement (most recent)
+  const latestAnnouncement = announcements.length > 0 ? announcements[0] : null;
 
   const [events] = useState([
     {
@@ -78,7 +106,8 @@ export default function Sidebar() {
   ]);
 
   const handleAddNews = () => {
-    console.log("Add news clicked");
+    // Open create announcement modal
+    setIsCreateModalOpen(true);
   };
 
   const handleAddEvent = () => {
@@ -106,34 +135,56 @@ export default function Sidebar() {
             className="h-auto p-1 text-primary text-sm"
             data-testid="button-add-news"
           >
-            See all
+            See more
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {news.map((item) => (
-            <div key={item.id} className="flex gap-3">
-              {item.isAction ? (
-                <div className="w-12 h-12 bg-primary rounded flex items-center justify-center flex-shrink-0">
-                  <Plus className="w-6 h-6 text-primary-foreground" />
-                </div>
-              ) : (
-                <div className="w-12 h-12 bg-muted rounded flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">📰</span>
-                </div>
-              )}
+          {/* Create Action Card */}
+          <div 
+            className="flex gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
+            onClick={handleAddNews}
+          >
+            <div className="w-12 h-12 bg-primary rounded flex items-center justify-center flex-shrink-0">
+              <Plus className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-foreground">
+                Create a news post
+              </h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Keep your audience informed
+              </p>
+            </div>
+          </div>
+
+          {/* Latest Announcement Card */}
+          {latestAnnouncement && (
+            <div 
+              className="flex gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
+              onClick={() => setLocation("/news-announcements")}
+            >
+              <Avatar className="w-12 h-12 flex-shrink-0">
+                {latestAnnouncement.author.profileImage ? (
+                  <AvatarImage src={latestAnnouncement.author.profileImage} alt={latestAnnouncement.author.firstName} />
+                ) : (
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {latestAnnouncement.author.firstName[0]}{latestAnnouncement.author.lastName[0]}
+                  </AvatarFallback>
+                )}
+              </Avatar>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-foreground" data-testid={`text-news-${item.id}-title`}>
-                  {item.title}
+                <h4 className="text-sm font-medium text-foreground truncate">
+                  {latestAnnouncement.title}
                 </h4>
-                <p className="text-xs text-muted-foreground mt-1" data-testid={`text-news-${item.id}-description`}>
-                  {item.description}
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {latestAnnouncement.content}
                 </p>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {item.author} {item.time}
+                  {latestAnnouncement.author.firstName} {latestAnnouncement.author.lastName} • {formatDate(latestAnnouncement.publishedAt)}
                 </div>
               </div>
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
 
@@ -253,6 +304,12 @@ export default function Sidebar() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Create Announcement Modal */}
+      <CreateAnnouncementModal 
+        isOpen={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen} 
+      />
     </div>
   );
 }
