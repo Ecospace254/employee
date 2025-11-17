@@ -31,6 +31,7 @@ export interface IStorage {
   // Announcement methods
   getAllAnnouncements(): Promise<(Announcement & { author: User })[]>;
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
+  deleteAnnouncement(id: string, userId: string): Promise<boolean>;
   incrementAnnouncementViews(id: string): Promise<void>;
   saveAnnouncement(userId: string, announcementId: string): Promise<SavedAnnouncement>;
   unsaveAnnouncement(userId: string, announcementId: string): Promise<boolean>;
@@ -312,6 +313,38 @@ export class DatabaseStorage implements IStorage {
       .values(announcement)
       .returning();
     return newAnnouncement;
+  }
+
+  /**
+   * Delete an announcement (only if user is the author)
+   */
+  async deleteAnnouncement(id: string, userId: string): Promise<boolean> {
+    // First check if the announcement exists and belongs to the user
+    const [announcement] = await db
+      .select()
+      .from(announcements)
+      .where(eq(announcements.id, id))
+      .limit(1);
+
+    if (!announcement) {
+      return false; // Announcement not found
+    }
+
+    if (announcement.authorId !== userId) {
+      return false; // User is not the author
+    }
+
+    // Delete associated saved announcements first (foreign key constraint)
+    await db
+      .delete(savedAnnouncements)
+      .where(eq(savedAnnouncements.announcementId, id));
+
+    // Delete the announcement
+    const result = await db
+      .delete(announcements)
+      .where(eq(announcements.id, id));
+
+    return true;
   }
 
   /**

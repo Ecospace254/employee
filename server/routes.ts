@@ -512,6 +512,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  /**
+   * DELETE announcement (only by author)
+   */
+  app.delete("/api/announcements/:id", async (req, res) => {
+    console.log(`DELETE /api/announcements/${req.params.id} called`);
+    
+    if (!req.isAuthenticated()) {
+      console.log("Not authenticated");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      console.log(`User ${user.id} attempting to delete announcement ${req.params.id}`);
+      
+      const deleted = await storage.deleteAnnouncement(req.params.id, user.id);
+      
+      if (!deleted) {
+        console.log("Delete failed - not authorized");
+        return res.status(403).json({ error: "You can only delete your own announcements" });
+      }
+
+      console.log("Delete successful");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting announcement:", error);
+      res.status(500).json({ error: "Failed to delete announcement" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

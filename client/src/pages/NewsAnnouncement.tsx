@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, Eye, Bookmark, BookmarkCheck, Calendar, Link2, ImageIcon, X } from "lucide-react";
+import { Plus, Search, Eye, Bookmark, BookmarkCheck, Calendar, Link2, ImageIcon, X, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -181,6 +181,56 @@ export default function NewsAnnouncement() {
       queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
     },
   });
+
+  // ============================================
+  // DELETE ANNOUNCEMENT MUTATION
+  // ============================================
+  const deleteAnnouncementMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/announcements/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        // Check if response is JSON or HTML
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const error = await response.json();
+          throw new Error(error.error || error.message || "Failed to delete announcement");
+        } else {
+          // Server returned HTML instead of JSON (likely a 404 or routing issue)
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Announcement deleted successfully",
+      });
+      // Refresh announcements list
+      queryClient.invalidateQueries({ queryKey: ["/api/announcements"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // ============================================
+  // HANDLE DELETE ANNOUNCEMENT
+  // ============================================
+  const handleDeleteAnnouncement = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this announcement? This action cannot be undone.")) {
+      deleteAnnouncementMutation.mutate(id);
+    }
+  };
 
   // ============================================
   // HANDLE IMAGE UPLOAD (Preview before submit)
@@ -636,7 +686,7 @@ export default function NewsAnnouncement() {
               </CardHeader>
 
               <CardContent className="pt-0">
-                {/* Bottom Section: View Count and Save Button */}
+                {/* Bottom Section: View Count, Save Button, and Delete Button */}
                 <div className="flex items-center justify-between pt-3 border-t">
                   {/* View Count */}
                   <div className="flex items-center gap-1 text-muted-foreground">
@@ -646,33 +696,50 @@ export default function NewsAnnouncement() {
                     </span>
                   </div>
 
-                  {/* Save/Unsave Button */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="gap-1 h-8 px-2"
-                    onClick={() => {
-                      // Increment view count when user interacts
-                      incrementViewMutation.mutate(announcement.id);
-                      // Toggle save status
-                      toggleSaveMutation.mutate({
-                        id: announcement.id,
-                        isSaved: announcement.isSaved
-                      });
-                    }}
-                  >
-                    {announcement.isSaved ? (
-                      <>
-                        <BookmarkCheck className="w-4 h-4 text-primary" />
-                        <span className="text-xs">Saved</span>
-                      </>
-                    ) : (
-                      <>
-                        <Bookmark className="w-4 h-4" />
-                        <span className="text-xs">Save</span>
-                      </>
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1">
+                    {/* Save/Unsave Button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1 h-8 px-2"
+                      onClick={() => {
+                        // Increment view count when user interacts
+                        incrementViewMutation.mutate(announcement.id);
+                        // Toggle save status
+                        toggleSaveMutation.mutate({
+                          id: announcement.id,
+                          isSaved: announcement.isSaved
+                        });
+                      }}
+                    >
+                      {announcement.isSaved ? (
+                        <>
+                          <BookmarkCheck className="w-4 h-4 text-primary" />
+                          <span className="text-xs">Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-4 h-4" />
+                          <span className="text-xs">Save</span>
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Delete Button - Only show if user is the author */}
+                    {user?.id === announcement.authorId && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteAnnouncement(announcement.id)}
+                        disabled={deleteAnnouncementMutation.isPending}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="text-xs">Delete</span>
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
