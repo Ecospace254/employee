@@ -1,0 +1,138 @@
+{
+  "id": "Board of Directors",
+  "title": "Board of Directors",
+  "children": [
+    {
+      "id": "Managing Director",
+      "title": "Managing Director",
+      "children": [
+        {
+          "id": "Training and Service Manager",
+          "title": "Training & Service Manager",
+          "children": [
+            {
+              "id": "Survey Solutions Executive",
+              "title": "Survey Solutions Executive"
+            },
+            {
+              "id": "BD Developer / Application Engineer",
+              "title": "BD Developer / Application Engineer"
+            },
+            {
+              "id": "Technical Support Executive - Service Center",
+              "title": "Technical Support Executive - Service Center"
+            },
+            {
+              "id": "Remote Sensing & Photogrammetrist",
+              "title": "Remote Sensing & Photogrammetrist"
+            },
+            {
+              "id": "GIS Analyst / Developer",
+              "title": "GIS Analyst / Developer"
+            }
+          ]
+        },
+        {
+          "id": "Sales Manager",
+          "title": "Sales Manager",
+          "children": [
+            {
+              "id": "Business Development Executive",
+              "title": "Business Development Executive"
+            },
+            {
+              "id": "Account Executive - Survey, Civil & Construction",
+              "title": "Account Executive - Survey, Civil & Construction"
+            },
+            {
+              "id": "Account Executive - Natural Resources & Agriculture",
+              "title": "Account Executive - Natural Resources & Agriculture"
+            },
+            {
+              "id": "Account Executive - Infrastructure & Business",
+              "title": "Account Executive - Infrastructure & Business"
+            },
+            {
+              "id": "Account Executive - Health & Human Services",
+              "title": "Account Executive - Health & Human Services"
+            },
+            {
+              "id": "Account Executive - Sales & Marketing",
+              "title": "Account Executive - Sales & Marketing"
+            }
+          ]
+        },
+        {
+          "id": "Finance and Administration Manager",
+          "title": "Finance & Administration Manager",
+          "children": [
+            {
+              "id": "Accountant",
+              "title": "Accountant",
+              "children": [
+                {
+                  "id": "Admin Assistant",
+                  "title": "Admin Assistant",
+                  "children": [
+                    {
+                      "id": "IT Administrator",
+                      "title": "IT Administrator",
+                      "children": [
+                        {
+                          "id": "Office Assistant",
+                          "title": "Office Assistant"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "Chief Remote Pilot",
+          "title": "Chief Remote Pilot",
+          "children": [
+            {
+              "id": "Type Specialist",
+              "title": "Type Specialist",
+              "children": [
+                {
+                  "id": "Remote Pilots",
+                  "title": "Remote Pilots",
+                  "children": [
+                    {
+                      "id": "RPAS Observers",
+                      "title": "RPAS Observers"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "Maintenance Controller",
+          "title": "Maintenance Controller",
+          "children": [
+            {
+              "id": "Authorized Service & Repair Center",
+              "title": "Authorized Service & Repair Center",
+              "children": [
+                {
+                  "id": "In-House Maintenance",
+                  "title": "In-House Maintenance"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "Head of Security",
+          "title": "Head of Security"
+        }
+      ]
+    }
+  ]
+}

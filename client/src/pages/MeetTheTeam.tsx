@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Building2, MessageCircle, Eye } from "lucide-react";
 import { PublicUser } from "@shared/schema";
+import OrganizationalChart from "@/components/OrganizationalChart";
 
 export default function MeetTheTeam() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -216,14 +217,15 @@ export default function MeetTheTeam() {
           </TabsContent>
 
           <TabsContent value="org-chart" className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-6">R&D organizational structure</h2>
-              <div className="bg-muted/50 p-8 rounded-lg">
-                <p className="text-muted-foreground">
-                  Interactive organizational chart coming soon. This will display the hierarchical 
-                  structure of our teams and reporting relationships.
+            <div>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold mb-4">Interactive Organizational Structure</h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Explore our organizational hierarchy. Click on nodes to expand/collapse branches, 
+                  use the controls to zoom and pan, and view the minimap for navigation.
                 </p>
               </div>
+              <OrganizationalChart />
             </div>
           </TabsContent>
 
