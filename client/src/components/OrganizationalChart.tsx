@@ -422,7 +422,7 @@ export default function OrganizationalChart() {
         fitView={false}
         minZoom={0.1}
         maxZoom={2}
-        defaultViewport={{ x: 50, y: 0, zoom: 0.5 }}
+        defaultViewport={{ x: 300, y: 0, zoom: 0.5 }}
         attributionPosition="bottom-right"
         proOptions={{ hideAttribution: true }}
         panOnScroll={false}

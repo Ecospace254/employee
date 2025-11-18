@@ -221,8 +221,9 @@ export default function MeetTheTeam() {
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold mb-4">Interactive Organizational Structure</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Explore our organizational hierarchy. Click on nodes to expand/collapse branches, 
-                  use the controls to zoom and pan, and view the minimap for navigation.
+                  Explore our organizational hierarchy. Click the expand/collapse buttons on each position 
+                  to view reporting structures. Use your mouse wheel to zoom in and out, or drag to navigate 
+                  through the chart.
                 </p>
               </div>
               <OrganizationalChart />
