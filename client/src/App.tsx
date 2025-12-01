@@ -13,6 +13,7 @@ import Training from "@/pages/Training";
 import Checklist from "@/pages/Checklist";
 import Documents from "@/pages/Documents";
 import NewsAnnouncement from "@/pages/NewsAnnouncement";
+import Events from "@/pages/Events";
 import Layout from "@/components/Layout";
 import { ProtectedRoute } from "./lib/protected-route";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -33,6 +34,7 @@ function Router() {
               <ProtectedRoute path="/training" component={Training} />
               <ProtectedRoute path="/documents" component={Documents} />
               <ProtectedRoute path="/checklist" component={Checklist} />
+              <ProtectedRoute path="/events" component={Events} />
               <ProtectedRoute path="/news-announcements" component={NewsAnnouncement} />
               <Route component={NotFound} />
             </Switch>

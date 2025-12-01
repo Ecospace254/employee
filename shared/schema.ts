@@ -67,14 +67,43 @@ export const savedAnnouncements = pgTable("saved_announcements", {
   savedAt: timestamp("saved_at").defaultNow().notNull(),
 });
 
+// Events system tables
 export const events = pgTable("events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   description: text("description"),
-  date: timestamp("date").notNull(),
-  time: text("time").notNull(),
-  location: text("location"),
-  targetRole: text("target_role"),
+  eventType: text("event_type").notNull(), // 'company_event', 'training', 'team_meeting', '1on1'
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  location: text("location"), // Physical location or 'Virtual'
+  meetingLink: text("meeting_link"), // For virtual meetings
+  organizerId: varchar("organizer_id").references(() => users.id).notNull(),
+  isRecurring: boolean("is_recurring").default(false),
+  recurrenceRule: text("recurrence_rule"), // JSON string: {frequency, interval, endDate}
+  maxParticipants: integer("max_participants"), // NULL = unlimited
+  isMandatory: boolean("is_mandatory").default(false), // For onboarding events
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const eventParticipants = pgTable("event_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => events.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  status: text("status").default("pending"), // 'pending', 'accepted', 'declined', 'maybe'
+  notified: boolean("notified").default(false),
+  notificationSentAt: timestamp("notification_sent_at"),
+  respondedAt: timestamp("responded_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const eventReminders = pgTable("event_reminders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => events.id, { onDelete: 'cascade' }).notNull(),
+  reminderTime: timestamp("reminder_time").notNull(),
+  reminderType: text("reminder_type"), // 'email', 'in_app'
+  sent: boolean("sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const courses = pgTable("courses", {
@@ -185,8 +214,33 @@ export const insertSavedAnnouncementSchema = createInsertSchema(savedAnnouncemen
   savedAt: true,
 });
 
-export const insertEventSchema = createInsertSchema(events).omit({
+export const insertEventSchema = createInsertSchema(events, {
+  startTime: z.union([z.date(), z.string()]),
+  endTime: z.union([z.date(), z.string()]),
+  eventType: z.enum(['company_event', 'training', 'team_meeting', '1on1']),
+  recurrenceRule: z.string().optional(),
+}).omit({
   id: true,
+  createdAt: true,
+  updatedAt: true,
+}).refine(data => new Date(data.endTime) > new Date(data.startTime), {
+  message: 'End time must be after start time',
+  path: ['endTime'],
+});
+
+export const insertEventParticipantSchema = createInsertSchema(eventParticipants, {
+  status: z.enum(['pending', 'accepted', 'declined', 'maybe']).default('pending'),
+}).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEventReminderSchema = createInsertSchema(eventReminders, {
+  reminderTime: z.union([z.date(), z.string()]),
+  reminderType: z.enum(['email', 'in_app']),
+}).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertCourseSchema = createInsertSchema(courses).omit({
@@ -213,6 +267,10 @@ export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type EventParticipant = typeof eventParticipants.$inferSelect;
+export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
+export type EventReminder = typeof eventReminders.$inferSelect;
+export type InsertEventReminder = z.infer<typeof insertEventReminderSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Resource = typeof resources.$inferSelect;

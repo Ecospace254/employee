@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken, type Announcement, type InsertAnnouncement, announcements, type SavedAnnouncement, savedAnnouncements } from "@shared/schema";
+import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken, type Announcement, type InsertAnnouncement, announcements, type SavedAnnouncement, savedAnnouncements, type Event, type InsertEvent, events, type EventParticipant, type InsertEventParticipant, eventParticipants } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc, and, sql, gte, lte, or } from "drizzle-orm";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -37,6 +37,16 @@ export interface IStorage {
   unsaveAnnouncement(userId: string, announcementId: string): Promise<boolean>;
   isAnnouncementSaved(userId: string, announcementId: string): Promise<boolean>;
   getSavedAnnouncements(userId: string): Promise<string[]>;
+  // Event methods
+  getEvents(filters?: { eventType?: string; startDate?: string; endDate?: string; userId?: string }): Promise<(Event & { organizer: User; participantCount?: number })[]>;
+  getEventById(id: string): Promise<(Event & { organizer: User; participants: (EventParticipant & { user: User })[] }) | undefined>;
+  createEvent(event: InsertEvent): Promise<Event>;
+  updateEvent(id: string, updates: Partial<InsertEvent>, userId: string): Promise<Event | undefined>;
+  deleteEvent(id: string, userId: string): Promise<boolean>;
+  getEventParticipants(eventId: string): Promise<(EventParticipant & { user: User })[]>;
+  addEventParticipants(eventId: string, userIds: string[]): Promise<EventParticipant[]>;
+  updateParticipantStatus(eventId: string, userId: string, status: string): Promise<EventParticipant | undefined>;
+  getUpcomingEvents(userId: string, limit: number): Promise<(Event & { organizer: User; participantStatus?: string })[]>;
   sessionStore: any;
 }
 
@@ -411,6 +421,296 @@ export class DatabaseStorage implements IStorage {
       .from(savedAnnouncements)
       .where(eq(savedAnnouncements.userId, userId));
     return saved.map((s) => s.announcementId);
+  }
+
+  // ============================================
+  // EVENT METHODS
+  // ============================================
+
+  /**
+   * Get events with optional filters
+   */
+  async getEvents(filters?: { 
+    eventType?: string; 
+    startDate?: string; 
+    endDate?: string; 
+    userId?: string 
+  }): Promise<(Event & { organizer: User; participantCount?: number })[]> {
+    let query = db
+      .select({
+        event: events,
+        organizer: users,
+      })
+      .from(events)
+      .leftJoin(users, eq(events.organizerId, users.id))
+      .$dynamic();
+
+    const conditions = [];
+
+    if (filters?.eventType) {
+      conditions.push(eq(events.eventType, filters.eventType));
+    }
+
+    if (filters?.startDate) {
+      conditions.push(gte(events.startTime, new Date(filters.startDate)));
+    }
+
+    if (filters?.endDate) {
+      conditions.push(lte(events.endTime, new Date(filters.endDate)));
+    }
+
+    if (filters?.userId) {
+      // Get events where user is organizer OR participant
+      const participantEvents = await db
+        .select({ eventId: eventParticipants.eventId })
+        .from(eventParticipants)
+        .where(eq(eventParticipants.userId, filters.userId));
+      
+      const participantEventIds = participantEvents.map(p => p.eventId);
+      
+      if (participantEventIds.length > 0) {
+        conditions.push(
+          or(
+            eq(events.organizerId, filters.userId),
+            sql`${events.id} IN ${participantEventIds}`
+          )
+        );
+      } else {
+        conditions.push(eq(events.organizerId, filters.userId));
+      }
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    const results = await query.orderBy(events.startTime);
+
+    // Get participant counts
+    const eventsWithCounts = await Promise.all(
+      results.map(async (result) => {
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(eventParticipants)
+          .where(eq(eventParticipants.eventId, result.event.id));
+
+        return {
+          ...result.event,
+          organizer: result.organizer!,
+          participantCount: Number(countResult.count) || 0,
+        };
+      })
+    );
+
+    return eventsWithCounts;
+  }
+
+  /**
+   * Get single event by ID with full details
+   */
+  async getEventById(id: string): Promise<(Event & { 
+    organizer: User; 
+    participants: (EventParticipant & { user: User })[] 
+  }) | undefined> {
+    const [result] = await db
+      .select({
+        event: events,
+        organizer: users,
+      })
+      .from(events)
+      .leftJoin(users, eq(events.organizerId, users.id))
+      .where(eq(events.id, id));
+
+    if (!result) return undefined;
+
+    const participants = await this.getEventParticipants(id);
+
+    return {
+      ...result.event,
+      organizer: result.organizer!,
+      participants,
+    };
+  }
+
+  /**
+   * Create new event
+   */
+  async createEvent(insertEvent: InsertEvent): Promise<Event> {
+    // Convert string dates to Date objects if needed
+    const eventToInsert = {
+      ...insertEvent,
+      startTime: typeof insertEvent.startTime === 'string' 
+        ? new Date(insertEvent.startTime) 
+        : insertEvent.startTime,
+      endTime: typeof insertEvent.endTime === 'string'
+        ? new Date(insertEvent.endTime)
+        : insertEvent.endTime,
+    };
+
+    const [event] = await db.insert(events).values(eventToInsert).returning();
+    return event;
+  }
+
+  /**
+   * Update event (only by organizer)
+   */
+  async updateEvent(
+    id: string, 
+    updates: Partial<InsertEvent>, 
+    userId: string
+  ): Promise<Event | undefined> {
+    // Verify user is the organizer
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, id))
+      .limit(1);
+
+    if (!event || event.organizerId !== userId) {
+      return undefined;
+    }
+
+    // Convert string dates to Date objects if needed
+    const updatesToApply: any = { ...updates, updatedAt: new Date() };
+    if (updates.startTime && typeof updates.startTime === 'string') {
+      updatesToApply.startTime = new Date(updates.startTime);
+    }
+    if (updates.endTime && typeof updates.endTime === 'string') {
+      updatesToApply.endTime = new Date(updates.endTime);
+    }
+
+    const [updated] = await db
+      .update(events)
+      .set(updatesToApply)
+      .where(eq(events.id, id))
+      .returning();
+
+    return updated;
+  }
+
+  /**
+   * Delete event (only by organizer)
+   */
+  async deleteEvent(id: string, userId: string): Promise<boolean> {
+    const [event] = await db
+      .select()
+      .from(events)
+      .where(eq(events.id, id))
+      .limit(1);
+
+    if (!event || event.organizerId !== userId) {
+      return false;
+    }
+
+    await db.delete(events).where(eq(events.id, id));
+    return true;
+  }
+
+  /**
+   * Get all participants for an event
+   */
+  async getEventParticipants(eventId: string): Promise<(EventParticipant & { user: User })[]> {
+    const participants = await db
+      .select({
+        participant: eventParticipants,
+        user: users,
+      })
+      .from(eventParticipants)
+      .leftJoin(users, eq(eventParticipants.userId, users.id))
+      .where(eq(eventParticipants.eventId, eventId));
+
+    return participants.map((p) => ({
+      ...p.participant,
+      user: p.user!,
+    }));
+  }
+
+  /**
+   * Add multiple participants to an event
+   */
+  async addEventParticipants(eventId: string, userIds: string[]): Promise<EventParticipant[]> {
+    const participantsToAdd = userIds.map((userId) => ({
+      eventId,
+      userId,
+      status: 'pending' as const,
+    }));
+
+    const added = await db
+      .insert(eventParticipants)
+      .values(participantsToAdd)
+      .onConflictDoNothing()
+      .returning();
+
+    return added;
+  }
+
+  /**
+   * Update participant RSVP status
+   */
+  async updateParticipantStatus(
+    eventId: string,
+    userId: string,
+    status: string
+  ): Promise<EventParticipant | undefined> {
+    const [updated] = await db
+      .update(eventParticipants)
+      .set({ 
+        status, 
+        respondedAt: new Date() 
+      })
+      .where(
+        and(
+          eq(eventParticipants.eventId, eventId),
+          eq(eventParticipants.userId, userId)
+        )
+      )
+      .returning();
+
+    return updated;
+  }
+
+  /**
+   * Get upcoming events for a user (for sidebar)
+   */
+  async getUpcomingEvents(
+    userId: string, 
+    limit: number
+  ): Promise<(Event & { organizer: User; participantStatus?: string })[]> {
+    const now = new Date();
+
+    // Get events where user is organizer or participant
+    const userEvents = await db
+      .select({
+        event: events,
+        organizer: users,
+        participantStatus: eventParticipants.status,
+      })
+      .from(events)
+      .leftJoin(users, eq(events.organizerId, users.id))
+      .leftJoin(
+        eventParticipants,
+        and(
+          eq(eventParticipants.eventId, events.id),
+          eq(eventParticipants.userId, userId)
+        )
+      )
+      .where(
+        and(
+          gte(events.startTime, now),
+          or(
+            eq(events.organizerId, userId),
+            eq(eventParticipants.userId, userId)
+          )
+        )
+      )
+      .orderBy(events.startTime)
+      .limit(limit);
+
+    return userEvents.map((result) => ({
+      ...result.event,
+      organizer: result.organizer!,
+      participantStatus: result.participantStatus || undefined,
+    }));
   }
 }
 

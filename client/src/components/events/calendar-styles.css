@@ -1,0 +1,198 @@
+/* Custom calendar styling to match design system */
+
+.calendar-container {
+  font-family: inherit;
+}
+
+.calendar-container .rbc-calendar {
+  font-family: inherit;
+}
+
+/* Header */
+.calendar-container .rbc-header {
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+/* Today highlight */
+.calendar-container .rbc-today {
+  background-color: hsl(var(--accent));
+}
+
+/* Events */
+.calendar-container .rbc-event {
+  padding: 2px 6px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.calendar-container .rbc-event:hover {
+  opacity: 1 !important;
+}
+
+.calendar-container .rbc-event-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.calendar-container .rbc-event-content {
+  font-weight: 500;
+}
+
+/* Selected event */
+.calendar-container .rbc-selected {
+  box-shadow: 0 0 0 2px hsl(var(--primary));
+}
+
+/* Time slots */
+.calendar-container .rbc-time-slot {
+  border-top: 1px solid hsl(var(--border));
+  min-height: 40px;
+}
+
+.calendar-container .rbc-timeslot-group {
+  border-left: 1px solid hsl(var(--border));
+  min-height: 80px;
+}
+
+.calendar-container .rbc-time-content {
+  border-top: 2px solid hsl(var(--border));
+}
+
+/* Day cells */
+.calendar-container .rbc-day-bg {
+  border-left: 1px solid hsl(var(--border));
+}
+
+.calendar-container .rbc-month-row {
+  border-top: 1px solid hsl(var(--border));
+  min-height: 80px;
+}
+
+.calendar-container .rbc-date-cell {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+/* Off-range dates */
+.calendar-container .rbc-off-range {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.5;
+}
+
+.calendar-container .rbc-off-range-bg {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Current time indicator */
+.calendar-container .rbc-current-time-indicator {
+  background-color: hsl(var(--destructive));
+  height: 2px;
+}
+
+/* Agenda view */
+.calendar-container .rbc-agenda-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+}
+
+.calendar-container .rbc-agenda-table {
+  border-collapse: collapse;
+}
+
+.calendar-container .rbc-agenda-date-cell,
+.calendar-container .rbc-agenda-time-cell {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.calendar-container .rbc-agenda-event-cell {
+  padding: 12px 16px;
+  font-size: 0.875rem;
+}
+
+/* Show more link */
+.calendar-container .rbc-show-more {
+  background-color: transparent;
+  color: hsl(var(--primary));
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.calendar-container .rbc-show-more:hover {
+  text-decoration: underline;
+}
+
+/* Overlay popup */
+.calendar-container .rbc-overlay {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 8px;
+  z-index: 50;
+}
+
+.calendar-container .rbc-overlay-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 8px 12px;
+  margin: -8px -8px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+/* Month view event rows */
+.calendar-container .rbc-row-segment {
+  padding: 2px 4px;
+}
+
+/* Selection styling */
+.calendar-container .rbc-slot-selection {
+  background-color: hsl(var(--primary) / 0.2);
+  border: 1px solid hsl(var(--primary));
+}
+
+/* Time labels */
+.calendar-container .rbc-time-header-gutter,
+.calendar-container .rbc-time-gutter {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .calendar-container .rbc-toolbar {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .calendar-container .rbc-header {
+    font-size: 0.75rem;
+    padding: 8px 4px;
+  }
+
+  .calendar-container .rbc-event {
+    font-size: 0.75rem;
+    padding: 1px 4px;
+  }
+
+  .calendar-container .rbc-date-cell {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .calendar-container .rbc-off-range-bg {
+    background-color: hsl(var(--muted) / 0.2);
+  }
+}

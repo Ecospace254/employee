@@ -7,9 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar } from "lucide-react";
 import { SiLinkedin, SiFacebook } from "react-icons/si";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import managerImage from "@assets/generated_images/Marketing_manager_headshot_78fdbb6a.png";
 import directorImage from "@assets/generated_images/Director_professional_headshot_35910231.png";
 import CreateAnnouncementModal from "@/components/CreateAnnouncementModal";
+import { useAuth } from "@/hooks/use-auth";
+import { useUpcomingEvents } from "@/hooks/use-events";
+import { CreateEventDialog } from "@/components/events/CreateEventDialog";
 
 // Type for announcement from API
 type Announcement = {
@@ -48,6 +52,8 @@ const formatDate = (dateString: string) => {
 export default function Sidebar() {
   const [, setLocation] = useLocation();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
+  const { user } = useAuth();
 
   // Fetch announcements from API
   const { data: announcements = [] } = useQuery<Announcement[]>({
@@ -57,26 +63,8 @@ export default function Sidebar() {
   // Get the latest announcement (most recent)
   const latestAnnouncement = announcements.length > 0 ? announcements[0] : null;
 
-  const [events] = useState([
-    {
-      id: "1",
-      title: "Title of event",
-      date: "Tuesday 12:00 AM - 1:00 PM",
-      month: "01"
-    },
-    {
-      id: "2",
-      title: "Title of event",
-      date: "Tuesday 12:00 AM - 1:00 PM",
-      month: "01"
-    },
-    {
-      id: "3",
-      title: "Title of event",
-      date: "Tuesday 12:00 AM - 1:00 PM",
-      month: "01"
-    }
-  ]);
+  // Fetch upcoming events (only if user is authenticated)
+  const { data: events = [], isLoading: eventsLoading, isError: eventsError } = useUpcomingEvents(3);
 
   const [teamMembers] = useState([
     {
@@ -111,15 +99,15 @@ export default function Sidebar() {
   };
 
   const handleAddEvent = () => {
-    console.log("Add event clicked");
+    setIsCreateEventOpen(true);
   };
 
   const handleCreateEvent = () => {
-    console.log("Create an event clicked");
+    setIsCreateEventOpen(true);
   };
 
   const handleSeeAllEvents = () => {
-    console.log("See all events clicked");
+    setLocation("/events");
   };
 
   return (
@@ -199,55 +187,63 @@ export default function Sidebar() {
             className="text-primary text-sm"
             data-testid="button-see-all-events"
           >
-            See all
+            See more
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button
-            onClick={handleAddEvent}
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start h-auto p-2"
-            data-testid="button-add-event"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add event
-          </Button>
-
-          <div className="bg-primary text-primary-foreground p-3 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm font-medium">Create an event</span>
-            </div>
-            <p className="text-xs text-primary-foreground/80 mb-3">
-              When you add an event, it will show here where your readers can see it.
-            </p>
+          <CreateEventDialog>
             <Button
-              onClick={handleCreateEvent}
-              variant="secondary"
+              variant="default"
               size="sm"
               data-testid="button-create-event"
             >
-              Create an event
+              <Plus className="w-4 h-4 mr-2" />
+              Create a new event
             </Button>
-          </div>
+          </CreateEventDialog>
 
-          {events.map((event) => (
-            <div key={event.id} className="flex gap-3">
-              <div className="text-center flex-shrink-0">
-                <div className="text-xs text-muted-foreground">Month</div>
-                <div className="text-lg font-semibold text-foreground">{event.month}</div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-foreground" data-testid={`text-event-${event.id}-title`}>
-                  {event.title}
-                </h4>
-                <p className="text-xs text-muted-foreground" data-testid={`text-event-${event.id}-date`}>
-                  {event.date}
-                </p>
-              </div>
+          {eventsLoading ? (
+            <div className="bg-muted p-3 rounded-lg animate-pulse">
+              <p className="text-xs text-muted-foreground text-center">
+                Loading...
+              </p>
             </div>
-          ))}
+          ) : events && events.length > 0 ? (
+            events.map((event: any) => {
+              const startDate = new Date(event.startTime);
+              const endDate = new Date(event.endTime);
+              const dayOfMonth = format(startDate, "dd");
+              const dayOfWeek = format(startDate, "EEEE");
+              const timeRange = `${format(startDate, "h:mm a")} - ${format(endDate, "h:mm a")}`;
+
+              return (
+                <div 
+                  key={event.id} 
+                  className="flex gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                  onClick={() => setLocation("/events")}
+                >
+                  <div className="text-center flex-shrink-0">
+                    <div className="text-xs text-muted-foreground">Day</div>
+                    <div className="text-lg font-semibold text-foreground">{dayOfMonth}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-foreground truncate" data-testid={`text-event-${event.id}-title`}>
+                      {event.title}
+                    </h4>
+                    <p className="text-xs text-muted-foreground" data-testid={`text-event-${event.id}-date`}>
+                      {dayOfWeek} {timeRange}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground text-center">
+                No upcoming events
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

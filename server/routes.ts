@@ -389,6 +389,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
+  // EVENT ROUTES
+  // ============================================
+
+  /**
+   * GET all events with filters
+   * Query params: eventType, startDate, endDate, userId (for my events)
+   */
+  app.get("/api/events", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { eventType, startDate, endDate, userId } = req.query;
+      const events = await storage.getEvents({
+        eventType: eventType as string,
+        startDate: startDate as string,
+        endDate: endDate as string,
+        userId: userId as string,
+      });
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  /**
+   * GET single event by ID with participants
+   */
+  app.get("/api/events/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const event = await storage.getEventById(req.params.id);
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      res.json(event);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      res.status(500).json({ error: "Failed to fetch event" });
+    }
+  });
+
+  /**
+   * CREATE new event
+   */
+  app.post("/api/events", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const eventData = {
+        ...req.body,
+        organizerId: user.id,
+      };
+      
+      const newEvent = await storage.createEvent(eventData);
+      res.status(201).json(newEvent);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ error: "Failed to create event" });
+    }
+  });
+
+  /**
+   * UPDATE event
+   */
+  app.put("/api/events/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const updated = await storage.updateEvent(req.params.id, req.body, user.id);
+      
+      if (!updated) {
+        return res.status(403).json({ error: "You can only edit your own events" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      res.status(500).json({ error: "Failed to update event" });
+    }
+  });
+
+  /**
+   * DELETE event
+   */
+  app.delete("/api/events/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const deleted = await storage.deleteEvent(req.params.id, user.id);
+      
+      if (!deleted) {
+        return res.status(403).json({ error: "You can only delete your own events" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      res.status(500).json({ error: "Failed to delete event" });
+    }
+  });
+
+  /**
+   * GET participants for an event
+   */
+  app.get("/api/events/:id/participants", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const participants = await storage.getEventParticipants(req.params.id);
+      res.json(participants);
+    } catch (error) {
+      console.error("Error fetching participants:", error);
+      res.status(500).json({ error: "Failed to fetch participants" });
+    }
+  });
+
+  /**
+   * ADD participants to event
+   */
+  app.post("/api/events/:id/participants", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const { userIds } = req.body;
+      
+      if (!Array.isArray(userIds) || userIds.length === 0) {
+        return res.status(400).json({ error: "userIds array is required" });
+      }
+      
+      const participants = await storage.addEventParticipants(req.params.id, userIds);
+      res.status(201).json(participants);
+    } catch (error) {
+      console.error("Error adding participants:", error);
+      res.status(500).json({ error: "Failed to add participants" });
+    }
+  });
+
+  /**
+   * UPDATE RSVP status for participant
+   */
+  app.put("/api/events/:eventId/participants/:userId", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const { status } = req.body;
+      
+      // Users can only update their own RSVP status
+      if (user.id !== req.params.userId) {
+        return res.status(403).json({ error: "You can only update your own RSVP status" });
+      }
+      
+      if (!['pending', 'accepted', 'declined', 'maybe'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status" });
+      }
+      
+      const updated = await storage.updateParticipantStatus(
+        req.params.eventId,
+        req.params.userId,
+        status
+      );
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Participant not found" });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating RSVP:", error);
+      res.status(500).json({ error: "Failed to update RSVP" });
+    }
+  });
+
+  /**
+   * GET upcoming events for sidebar (next 5 events)
+   */
+  app.get("/api/events/upcoming/sidebar", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      const upcomingEvents = await storage.getUpcomingEvents(user.id, 5);
+      res.json(upcomingEvents);
+    } catch (error) {
+      console.error("Error fetching upcoming events:", error);
+      res.status(500).json({ error: "Failed to fetch upcoming events" });
+    }
+  });
+
+  // ============================================
   // ANNOUNCEMENT ROUTES
   // ============================================
 
