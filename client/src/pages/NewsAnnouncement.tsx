@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import CreateAnnouncementModal from "@/components/CreateAnnouncementModal";
+import CreateAnnouncementModal from "@/components/home/CreateAnnouncementModal";
 
 // ============================================
 // HELPER FUNCTION: Extract YouTube Video ID from URL

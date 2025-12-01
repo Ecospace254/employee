@@ -1,8 +1,8 @@
-import WelcomeHero from "@/components/WelcomeHero";
-import ActionCards from "@/components/ActionCards";
-import PopularPortals from "@/components/PopularPortals";
-import CompanyCulture from "@/components/CompanyCulture";
-import Sidebar from "@/components/Sidebar";
+import WelcomeHero from "@/components/home/WelcomeHero";
+import ActionCards from "@/components/home/ActionCards";
+import PopularPortals from "@/components/home/PopularPortals";
+import CompanyCulture from "@/components/home/CompanyCulture";
+import Sidebar from "@/components/home/Sidebar";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Building2, MessageCircle, Eye } from "lucide-react";
 import { PublicUser } from "@shared/schema";
-import OrganizationalChart from "@/components/OrganizationalChart";
+import OrganizationalChart from "@/components/meet-the-team/OrganizationalChart";
 
 export default function MeetTheTeam() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");

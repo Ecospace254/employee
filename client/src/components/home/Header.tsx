@@ -5,8 +5,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ChevronDown, User, Settings, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
-import ProfileModal from "@/components/ProfileModal";
-import SettingsModal from "@/components/SettingsModal";
+import ProfileModal from "@/components/home/profile/ProfileModal";
+import SettingsModal from "@/components/home/settings/SettingsModal";
 
 interface HeaderProps { }
 

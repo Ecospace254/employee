@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import managerImage from "@assets/generated_images/Marketing_manager_headshot_78fdbb6a.png";
 import directorImage from "@assets/generated_images/Director_professional_headshot_35910231.png";
-import CreateAnnouncementModal from "@/components/CreateAnnouncementModal";
+import CreateAnnouncementModal from "@/components/home/CreateAnnouncementModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpcomingEvents } from "@/hooks/use-events";
 import { CreateEventDialog } from "@/components/events/CreateEventDialog";
