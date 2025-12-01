@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useEvents } from "@/hooks/use-events";
-import { EventList } from "@/components/events/EventList";
-import { EventCalendar } from "@/components/events/EventCalendar";
-import { CreateEventDialog } from "@/components/events/CreateEventDialog";
-import { EventDetailsModal } from "@/components/events/EventDetailsModal";
+import { EventList } from "@/components/home/events/EventList";
+import { EventCalendar } from "@/components/home/events/EventCalendar";
+import { CreateEventDialog } from "@/components/home/events/CreateEventDialog";
+import { EventDetailsModal } from "@/components/home/events/EventDetailsModal";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {

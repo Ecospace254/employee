@@ -13,7 +13,7 @@ import directorImage from "@assets/generated_images/Director_professional_headsh
 import CreateAnnouncementModal from "@/components/home/CreateAnnouncementModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpcomingEvents } from "@/hooks/use-events";
-import { CreateEventDialog } from "@/components/events/CreateEventDialog";
+import { CreateEventDialog } from "@/components/home/events/CreateEventDialog";
 
 // Type for announcement from API
 type Announcement = {
