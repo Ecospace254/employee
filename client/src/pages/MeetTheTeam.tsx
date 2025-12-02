@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Building2, MessageCircle, Eye } from "lucide-react";
 import { PublicUser } from "@shared/schema";
 import OrganizationalChart from "@/components/meet-the-team/OrganizationalChart";
+import teamBackground from "@assets/MeetTeamBackground.jpg";
 
 export default function MeetTheTeam() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -41,21 +42,28 @@ export default function MeetTheTeam() {
   return (
     <div>
       {/* Hero Section */}
-      <div 
-        className="relative h-64 sm:h-80 lg:h-96 bg-cover bg-center flex items-center justify-center"
-        style={{
-          backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1200 400\"><rect fill=\"%23f8f9fa\" width=\"1200\" height=\"400\"/><rect fill=\"%23e9ecef\" x=\"100\" y=\"50\" width=\"300\" height=\"200\"/><rect fill=\"%23dee2e6\" x=\"450\" y=\"80\" width=\"250\" height=\"150\"/><rect fill=\"%23ced4da\" x=\"750\" y=\"60\" width=\"350\" height=\"180\"/></svg>')"
-        }}
-      >
-        <div className="text-center text-white px-4">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4" data-testid="text-hero-title">
-            Meet the team
-          </h1>
-          <p className="text-base sm:text-lg lg:text-xl text-white/90">
-            Discover the talented individuals who make our organization successful
-          </p>
-        </div>
-      </div>
+      {/* Hero Section */}
+<div className="relative h-64 sm:h-80 lg:h-96 flex items-center justify-center overflow-hidden">
+  {/* Background Image */}
+  <img 
+    src={teamBackground} 
+    alt="Team background" 
+    className="absolute inset-0 w-full h-full object-cover"
+  />
+  
+  {/* Dark Overlay */}
+  <div className="absolute inset-0 bg-black/60"></div>
+  
+  {/* Content */}
+  <div className="relative z-10 text-center text-white px-4">
+    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4" data-testid="text-hero-title">
+      Meet the team
+    </h1>
+    <p className="text-base sm:text-lg lg:text-xl text-white/90">
+      Discover the talented individuals who make our organization successful
+    </p>
+  </div>
+</div>
 
       {/* Leadership Message Section */}
       <div className="bg-primary dark:bg-slate-800 py-8 sm:py-12 lg:py-16">

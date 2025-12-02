@@ -21,7 +21,7 @@ export default function PopularPortals() {
       title: "Company news",
       description: "Stay up to date on news and announcements",
       icon: Newspaper,
-      onClick: () => console.log("Company news clicked")
+      onClick: () => setLocation("/news-announcements")
     },
     {
       id: "employee-directory",
