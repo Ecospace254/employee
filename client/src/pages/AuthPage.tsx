@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, InsertUser } from "@shared/schema";
 import { z } from "zod";
 import { Redirect } from "wouter";
+import { Info } from "lucide-react";
+import { DepartmentGuideModal } from "@/components/auth/DepartmentGuideModal";
+import { departments } from "@/data/departments";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -37,6 +40,7 @@ type RegisterData = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showDepartmentGuide, setShowDepartmentGuide] = useState(false);
   
   const { user, loginMutation, registerMutation } = useAuth();
 
@@ -228,10 +232,44 @@ export default function AuthPage() {
                       name="department"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Department</FormLabel>
-                          <FormControl>
-                            <Input {...field} value={field.value ?? ""} data-testid="input-department" />
-                          </FormControl>
+                          <FormLabel>Department & Role</FormLabel>
+                          <div className="flex gap-2">
+                            <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                              <FormControl>
+                                <SelectTrigger className="flex-1" data-testid="select-department">
+                                  <SelectValue placeholder="Select your role..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-[300px]">
+                                {departments.map((dept, deptIndex) => (
+                                  <div key={dept.id}>
+                                    {deptIndex > 0 && <SelectSeparator />}
+                                    <SelectGroup>
+                                      <SelectLabel>{dept.name}</SelectLabel>
+                                      {dept.roles.map((role) => (
+                                        <SelectItem key={role} value={role}>
+                                          {role}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectGroup>
+                                  </div>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => setShowDepartmentGuide(true)}
+                              className="flex-shrink-0"
+                              data-testid="button-view-departments"
+                            >
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <FormDescription className="text-xs">
+                            Not sure? Click the info button to view all departments
+                          </FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -318,6 +356,12 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+
+      {/* Department Guide Modal */}
+      <DepartmentGuideModal 
+        open={showDepartmentGuide} 
+        onOpenChange={setShowDepartmentGuide} 
+      />
     </div>
   );
 }
