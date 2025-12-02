@@ -9,6 +9,8 @@ import { Users, Building2, MessageCircle, Eye } from "lucide-react";
 import { PublicUser } from "@shared/schema";
 import OrganizationalChart from "@/components/meet-the-team/OrganizationalChart";
 import teamBackground from "@assets/MeetTeamBackground.jpg";
+import { departments } from "@/data/departments";
+import { filterUsersByDepartment, getDepartmentMemberCount, groupUsersByDepartment } from "@/utils/departmentHelpers";
 
 export default function MeetTheTeam() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
@@ -17,10 +19,8 @@ export default function MeetTheTeam() {
     queryKey: ["/api/team-members"],
   });
 
-  const departments = Array.from(new Set(teamMembers.map(m => m.department).filter((dept): dept is string => Boolean(dept))));
-  const filteredMembers = selectedDepartment === "all" 
-    ? teamMembers 
-    : teamMembers.filter(m => m.department === selectedDepartment);
+  // Group members by department
+  const membersByDepartment = groupUsersByDepartment(teamMembers);
 
   const leadership = teamMembers.filter(member => 
     member.role === "hr" || member.jobTitle?.toLowerCase().includes("director") || 
@@ -112,7 +112,7 @@ export default function MeetTheTeam() {
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-3">
               <TabsTrigger value="directory" data-testid="tab-directory">
                 <Users className="w-4 h-4 mr-2" />
-                Directory
+                Departments
               </TabsTrigger>
               <TabsTrigger value="org-chart" data-testid="tab-org-chart">
                 <Building2 className="w-4 h-4 mr-2" />
@@ -126,102 +126,155 @@ export default function MeetTheTeam() {
           </div>
 
           <TabsContent value="directory" className="space-y-8">
-            {/* Leadership Section */}
-            {leadership.length > 0 && (
-              <div>
-                <h2 className="text-2xl font-bold mb-6" data-testid="text-leadership-title">
-                  Meet the Research & Development team leaders
-                </h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {leadership.map((member) => (
-                    <Card key={member.id} className="hover-elevate dark:bg-slate-800 transition-all duration-200" data-testid={`card-leader-${member.id}`}>
-                      <CardContent className="p-6 text-center">
-                        <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-background shadow-lg">
-                          <AvatarImage src={member.profileImage || undefined} />
-                          <AvatarFallback className="text-lg bg-primary-foreground/10">
-                            {getInitials(member.firstName, member.lastName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        
-                        <h3 className="font-semibold text-lg mb-1" data-testid={`text-leader-name-${member.id}`}>
-                          {member.firstName} {member.lastName}
-                        </h3>
-                        
-                        <p className="text-sm text-muted-foreground mb-2" data-testid={`text-leader-title-${member.id}`}>
-                          {member.jobTitle || member.role}
-                        </p>
-                        
-                        {member.department && (
-                          <Badge variant="secondary" className="text-xs">
-                            {member.department}
-                          </Badge>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Department Filter */}
-            <div className="flex flex-wrap gap-2 justify-center">
-              <Button
-                variant={selectedDepartment === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedDepartment("all")}
-                data-testid="button-filter-all"
-              >
-                All Departments
-              </Button>
-              {departments.map((dept) => (
-                <Button
-                  key={dept}
-                  variant={selectedDepartment === dept ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedDepartment(dept)}
-                  data-testid={`button-filter-${dept}`}
+            {/* Department Tabs */}
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="w-full justify-center overflow-x-auto flex-wrap h-auto gap-2 bg-transparent p-2">
+                <TabsTrigger 
+                  value="all" 
+                  className="whitespace-nowrap bg-blue-50 hover:bg-blue-100 data-[state=active]:bg-blue-600 data-[state=active]:text-white border border-blue-200 data-[state=active]:border-blue-600 transition-all"
                 >
-                  {dept}
-                </Button>
-              ))}
-            </div>
+                  All Departments ({teamMembers.length})
+                </TabsTrigger>
+                {departments.map((dept, index) => {
+                  const count = getDepartmentMemberCount(teamMembers, dept.name);
+                  const blueShades = [
+                    "bg-blue-100 hover:bg-blue-200",
+                    "bg-sky-100 hover:bg-sky-200",
+                    "bg-cyan-100 hover:bg-cyan-200",
+                    "bg-blue-50 hover:bg-blue-150",
+                    "bg-indigo-100 hover:bg-indigo-200",
+                    "bg-sky-50 hover:bg-sky-150",
+                    "bg-cyan-50 hover:bg-cyan-150"
+                  ];
+                  const shadeClass = blueShades[index % blueShades.length];
+                  return (
+                    <TabsTrigger 
+                      key={dept.id} 
+                      value={dept.id} 
+                      className={`whitespace-nowrap ${shadeClass} data-[state=active]:bg-blue-600 data-[state=active]:text-white border border-blue-200 data-[state=active]:border-blue-600 transition-all`}
+                    >
+                      {dept.name} ({count})
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
 
-            {/* All Team Members */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6" data-testid="text-team-title">
-                {selectedDepartment === "all" ? "All Team Members" : `${selectedDepartment} Team`}
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredMembers.map((member) => (
-                  <Card key={member.id} className="hover-elevate transition-all duration-200 dark:bg-slate-800" data-testid={`card-member-${member.id}`}>
-                    <CardContent className="p-6 text-center">
-                      <Avatar className="w-20 h-20 mx-auto mb-4">
-                        <AvatarImage src={member.profileImage || undefined} />
-                        <AvatarFallback className="bg-primary-foreground/10">
-                          {getInitials(member.firstName, member.lastName)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <h3 className="font-semibold mb-1" data-testid={`text-member-name-${member.id}`}>
-                        {member.firstName} {member.lastName}
-                      </h3>
-                      
-                      <p className="text-sm text-muted-foreground mb-2" data-testid={`text-member-title-${member.id}`}>
-                        {member.jobTitle || member.role}
-                      </p>
-                      
-                      {member.department && (
-                        <Badge variant="secondary" className="text-xs">
-                          {member.department}
-                        </Badge>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+              {/* All Departments Tab - Grouped by Department */}
+              <TabsContent value="all" className="space-y-8 mt-6">
+                {departments.map((dept) => {
+                  const deptMembers = membersByDepartment[dept.name] || [];
+                  if (deptMembers.length === 0) return null;
+                  
+                  return (
+                    <div key={dept.id}>
+                      <h2 className="text-2xl font-bold mb-6">
+                        {dept.name}
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {deptMembers.map((member, index) => {
+                          const blueShades = [
+                            "bg-blue-50 dark:bg-blue-950/30",
+                            "bg-sky-50 dark:bg-sky-950/30",
+                            "bg-cyan-50 dark:bg-cyan-950/30",
+                            "bg-indigo-50 dark:bg-indigo-950/30",
+                            "bg-blue-100 dark:bg-blue-900/30",
+                            "bg-sky-100 dark:bg-sky-900/30",
+                            "bg-cyan-100 dark:bg-cyan-900/30"
+                          ];
+                          const cardBg = blueShades[index % blueShades.length];
+                          return (
+                            <Card key={member.id} className={`hover-elevate transition-all duration-200 ${cardBg} border-blue-200 dark:border-blue-800`} data-testid={`card-member-${member.id}`}>
+                              <CardContent className="p-6 text-center">
+                                <Avatar className="w-20 h-20 mx-auto mb-4">
+                                  <AvatarImage src={member.profileImage || undefined} />
+                                  <AvatarFallback className="bg-primary-foreground/10">
+                                    {getInitials(member.firstName, member.lastName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                
+                                <h3 className="font-semibold mb-1" data-testid={`text-member-name-${member.id}`}>
+                                  {member.firstName} {member.lastName}
+                                </h3>
+                                
+                                <p className="text-sm text-muted-foreground mb-2" data-testid={`text-member-title-${member.id}`}>
+                                  {member.jobTitle || member.role}
+                                </p>
+                                
+                                {member.department && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {member.department}
+                                  </Badge>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </TabsContent>
+
+              {/* Individual Department Tabs */}
+              {departments.map((dept) => {
+                const deptMembers = membersByDepartment[dept.name] || [];
+                
+                return (
+                  <TabsContent key={dept.id} value={dept.id} className="mt-6">
+                    <h2 className="text-2xl font-bold mb-6">
+                      {dept.name} Team
+                    </h2>
+                    {deptMembers.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {deptMembers.map((member, index) => {
+                          const blueShades = [
+                            "bg-blue-50 dark:bg-blue-950/30",
+                            "bg-sky-50 dark:bg-sky-950/30",
+                            "bg-cyan-50 dark:bg-cyan-950/30",
+                            "bg-indigo-50 dark:bg-indigo-950/30",
+                            "bg-blue-100 dark:bg-blue-900/30",
+                            "bg-sky-100 dark:bg-sky-900/30",
+                            "bg-cyan-100 dark:bg-cyan-900/30"
+                          ];
+                          const cardBg = blueShades[index % blueShades.length];
+                          return (
+                            <Card key={member.id} className={`hover-elevate transition-all duration-200 ${cardBg} border-blue-200 dark:border-blue-800`} data-testid={`card-member-${member.id}`}>
+                              <CardContent className="p-6 text-center">
+                                <Avatar className="w-20 h-20 mx-auto mb-4">
+                                  <AvatarImage src={member.profileImage || undefined} />
+                                  <AvatarFallback className="bg-primary-foreground/10">
+                                    {getInitials(member.firstName, member.lastName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                
+                                <h3 className="font-semibold mb-1" data-testid={`text-member-name-${member.id}`}>
+                                  {member.firstName} {member.lastName}
+                                </h3>
+                                
+                                <p className="text-sm text-muted-foreground mb-2" data-testid={`text-member-title-${member.id}`}>
+                                  {member.jobTitle || member.role}
+                                </p>
+                                
+                                {member.department && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {member.department}
+                                  </Badge>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                        <p>No team members in this department yet.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="org-chart" className="space-y-8">

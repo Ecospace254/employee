@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { Camera, Save, X, User, Mail, Briefcase, Calendar, Crop, ChevronDown, Phone } from "lucide-react";
+import { Camera, Save, X, User, Mail, Briefcase, Calendar, Crop, ChevronDown, Phone, Info } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
@@ -10,8 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import ReactCrop, { Crop as CropType, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
+import { departments } from "@/data/departments";
+import { extractDepartmentFromRole } from "@/utils/departmentHelpers";
+import { DepartmentGuideModal } from "@/components/auth/DepartmentGuideModal";
 
 interface ProfileModalProps {
     isOpen: boolean;
@@ -25,6 +29,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const [openPersonal, setOpenPersonal] = useState(true);
     const [openContact, setOpenContact] = useState(true);
     const [openEducation, setOpenEducation] = useState(true);
+    const [showDepartmentGuide, setShowDepartmentGuide] = useState(false);
 
     const [isEditing, setIsEditing] = useState(false);
     // Editable field states - Personal Information
@@ -58,6 +63,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     });
     const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
     const imgRef = useRef<HTMLImageElement>(null);
+
+    // Auto-update department when job title changes
+    useEffect(() => {
+        if (jobTitleField && isEditing) {
+            const extractedDept = extractDepartmentFromRole(jobTitleField);
+            if (extractedDept) {
+                setDepartmentField(extractedDept);
+            }
+        }
+    }, [jobTitleField, isEditing]);
 
     if (!user) return null;
 
@@ -446,16 +461,52 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                         <div className="space-y-1.5 sm:space-y-2">
                                             <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
                                                 <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
-                                                Job Title
+                                                Job Title / Role
                                             </Label>
-                                            <Input
-                                                value={jobTitleField}
-                                                onChange={(e) => setJobTitleField(e.target.value)}
-                                                disabled={!isEditing}
-                                                aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
-                                                title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
-                                                className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
-                                            />
+                                            {isEditing ? (
+                                                <div className="flex gap-2">
+                                                    <Select
+                                                        value={jobTitleField}
+                                                        onValueChange={setJobTitleField}
+                                                        disabled={!isEditing}
+                                                    >
+                                                        <SelectTrigger className="flex-1 bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base text-left">
+                                                            <SelectValue placeholder="Select your role..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="max-h-[300px]">
+                                                            {departments.map((dept, deptIndex) => (
+                                                                <div key={dept.id}>
+                                                                    {deptIndex > 0 && <SelectSeparator />}
+                                                                    <SelectGroup>
+                                                                        <SelectLabel>{dept.name}</SelectLabel>
+                                                                        {dept.roles.map((role) => (
+                                                                            <SelectItem key={role} value={role}>
+                                                                                {role}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectGroup>
+                                                                </div>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        onClick={() => setShowDepartmentGuide(true)}
+                                                        className="flex-shrink-0"
+                                                        title="View department guide"
+                                                    >
+                                                        <Info className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Input
+                                                    value={jobTitleField}
+                                                    disabled
+                                                    className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
+                                                />
+                                            )}
                                         </div>
 
                                         {/* Department */}
@@ -463,14 +514,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                                             <Label className="flex items-center gap-2 text-sm dark:text-gray-200">
                                                 <Briefcase className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-blue-400" />
                                                 Department
+                                                {isEditing && (
+                                                    <Badge variant="secondary" className="text-xs ml-auto">
+                                                        Auto-filled
+                                                    </Badge>
+                                                )}
                                             </Label>
                                             <Input
                                                 value={departmentField}
-                                                onChange={(e) => setDepartmentField(e.target.value)}
-                                                disabled={!isEditing}
-                                                aria-describedby={!isEditing ? "edit-mode-instruction" : undefined}
-                                                title={!isEditing ? "Click 'Edit Profile' button below to edit this field" : ""}
+                                                disabled
                                                 className="bg-muted/50 dark:bg-slate-800 dark:text-white dark:border-slate-600 text-sm sm:text-base"
+                                                title="Department is automatically set based on your job title"
                                             />
                                         </div>
 
@@ -752,6 +806,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Department Guide Modal */}
+            <DepartmentGuideModal
+                open={showDepartmentGuide}
+                onOpenChange={setShowDepartmentGuide}
+            />
         </>
     );
 }

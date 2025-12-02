@@ -14,6 +14,7 @@ import { Redirect } from "wouter";
 import { Info } from "lucide-react";
 import { DepartmentGuideModal } from "@/components/auth/DepartmentGuideModal";
 import { departments } from "@/data/departments";
+import { extractDepartmentFromRole } from "@/utils/departmentHelpers";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -81,11 +82,17 @@ export default function AuthPage() {
     console.log('Form state email:', registerForm.getValues('email'));
     if (registerMutation) {
       const { confirmPassword, ...userData } = data;
+      
+      // Extract department from the selected role
+      const selectedRole = data.department; // This is actually the role/job title
+      const actualDepartment = extractDepartmentFromRole(selectedRole);
+      
       // Add required fields that are missing from the simplified schema
       const completeUserData = {
         ...userData,
         role: "employee",
-        jobTitle: "",
+        jobTitle: selectedRole, // Store the full role name as job title
+        department: actualDepartment, // Store the extracted department name
         bio: "",
         isActive: true
       };
@@ -236,7 +243,7 @@ export default function AuthPage() {
                           <div className="flex gap-2">
                             <Select onValueChange={field.onChange} value={field.value ?? ""}>
                               <FormControl>
-                                <SelectTrigger className="flex-1" data-testid="select-department">
+                                <SelectTrigger className="flex-1 text-left" data-testid="select-department">
                                   <SelectValue placeholder="Select your role..." />
                                 </SelectTrigger>
                               </FormControl>
