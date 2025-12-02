@@ -26,12 +26,12 @@ export function EventsSidebar({
     { id: "recordings" as const, icon: Video, label: "Recordings" },
   ];
 
-  if (!isOpen) return null;
+  if (!isOpen && isMobile) return null;
 
   return (
     <>
       {/* Overlay for mobile */}
-      {isMobile && (
+      {isMobile && isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={onClose}
@@ -40,8 +40,8 @@ export function EventsSidebar({
 
       {/* Sidebar */}
       <aside className={cn(
-        "w-64 border-r border-border bg-background dark:bg-slate-900 p-4 space-y-2",
-        isMobile && "fixed left-0 top-0 h-full z-50 shadow-xl"
+        "w-64 shadow-2xl dark:bg-slate-900 p-4 space-y-2 md:block",
+        isMobile ? (isOpen ? "bg-blue-200 fixed left-0 top-0 h-full z-50 transform transition-transform duration-300" : "hidden") : "",
       )}>
         {/* Close button for mobile */}
         {isMobile && (

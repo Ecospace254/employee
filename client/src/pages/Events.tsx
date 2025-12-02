@@ -230,17 +230,19 @@ export default function Events() {
   };
 
   return (
-    <div className="flex h-screen bg-background dark:bg-slate-950">
-      {/* Mobile Menu Button */}
+    <div className="flex flex-col md:flex-row h-screen dark:bg-slate-950">
+      {/* Mobile Menu Button Row */}
       {isMobile && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        >
-          <Menu className="h-6 w-6" />
-        </Button>
+        <div className="w-full bg-primary/5 py-2 px-4 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-primary/90 backdrop-blur-sm hover:bg-primary text-primary-foreground"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        </div>
       )}
 
       {/* Sidebar */}
@@ -265,7 +267,7 @@ export default function Events() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="px-4 md:px-6 py-8 max-w-7xl mx-auto">
+        <div className="px-4 md:px-6 py-6 max-w-7xl mx-auto">
           {renderContent()}
         </div>
       </main>
