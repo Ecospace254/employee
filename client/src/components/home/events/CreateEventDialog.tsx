@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, Users, Plus, X } from "lucide-react";
+import { CalendarIcon, Loader2, Users, Plus, X, Clock } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -185,14 +185,11 @@ export function CreateEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Event
-          </Button>
-        )}
-      </DialogTrigger>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
@@ -300,15 +297,29 @@ export function CreateEventDialog({
                 )}
               />
 
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Start Time *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => handleStartTimeChange(e.target.value)}
-                  />
-                </FormControl>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className="pl-3 text-left font-normal"
+                      >
+                        {startTime || <span>Pick a time</span>}
+                        <Clock className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3" align="start">
+                    <Input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => handleStartTimeChange(e.target.value)}
+                      className="w-full"
+                    />
+                  </PopoverContent>
+                </Popover>
               </FormItem>
             </div>
 
@@ -350,15 +361,29 @@ export function CreateEventDialog({
                 )}
               />
 
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>End Time *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => handleEndTimeChange(e.target.value)}
-                  />
-                </FormControl>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className="pl-3 text-left font-normal"
+                      >
+                        {endTime || <span>Pick a time</span>}
+                        <Clock className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3" align="start">
+                    <Input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => handleEndTimeChange(e.target.value)}
+                      className="w-full"
+                    />
+                  </PopoverContent>
+                </Popover>
               </FormItem>
             </div>
 

@@ -82,6 +82,9 @@ export const events = pgTable("events", {
   recurrenceRule: text("recurrence_rule"), // JSON string: {frequency, interval, endDate}
   maxParticipants: integer("max_participants"), // NULL = unlimited
   isMandatory: boolean("is_mandatory").default(false), // For onboarding events
+  recordingUrl: text("recording_url"), // URL to recorded meeting video
+  recordingThumbnail: text("recording_thumbnail"), // Thumbnail image for recording
+  recordingDuration: integer("recording_duration"), // Duration in minutes
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

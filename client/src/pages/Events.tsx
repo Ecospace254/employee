@@ -1,182 +1,280 @@
 import { useState } from "react";
 import { useEvents } from "@/hooks/use-events";
-import { EventList } from "@/components/home/events/EventList";
-import { EventCalendar } from "@/components/home/events/EventCalendar";
-import { CreateEventDialog } from "@/components/home/events/CreateEventDialog";
-import { EventDetailsModal } from "@/components/home/events/EventDetailsModal";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Plus, Calendar, List, Grid } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { EventsSidebar } from "@/components/home/events/EventsSidebar";
+import { EventsHero } from "@/components/home/events/EventsHero";
+import { EventsActionCards } from "@/components/home/events/EventsActionCards";
+import { TodaysMeetings } from "@/components/home/events/TodaysMeetings";
+import { MeetingCard } from "@/components/home/events/MeetingCard";
+import { CreateEventDialog } from "@/components/home/events/CreateEventDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Loader2, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { isSameDay } from "date-fns";
 import type { EventWithDetails } from "@/hooks/use-events";
 
 export default function Events() {
   const { user } = useAuth();
-  const [eventTypeFilter, setEventTypeFilter] = useState<string | undefined>();
-  const [viewMode, setViewMode] = useState<"upcoming" | "my-events" | "all">("upcoming");
-  const [displayMode, setDisplayMode] = useState<"list" | "calendar">("list");
-  const [selectedEvent, setSelectedEvent] = useState<EventWithDetails | null>(null);
+  const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [activeSection, setActiveSection] = useState<"home" | "upcoming" | "previous" | "recordings">("home");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [prefilledDate, setPrefilledDate] = useState<{ start: Date; end: Date } | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Fetch events based on current view
-  const now = new Date().toISOString();
-  const { events, isLoading } = useEvents(
-    viewMode === "my-events"
-      ? { userId: user?.id }
-      : viewMode === "upcoming"
-      ? { startDate: now }
-      : undefined
+  const today = new Date();
+
+  // Fetch all events
+  const { events: allEvents, isLoading } = useEvents();
+
+  // Filter events
+  const upcomingEvents = allEvents?.filter(event => 
+    new Date(event.startTime) >= new Date()
+  ).sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()) || [];
+
+  const previousEvents = allEvents?.filter(event => 
+    new Date(event.endTime) < new Date()
+  ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()) || [];
+
+  const todaysMeetings = upcomingEvents.filter(event =>
+    isSameDay(new Date(event.startTime), today)
   );
 
-  // Filter by event type if selected
-  const filteredEvents = eventTypeFilter
-    ? events?.filter((event) => event.eventType === eventTypeFilter)
-    : events;
+  const recordedEvents = allEvents?.filter(event => 
+    event.recordingUrl
+  ).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()) || [];
 
-  // Sort events by start time
-  const sortedEvents = filteredEvents?.sort(
-    (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-  );
+  // Get next upcoming meeting for hero badge
+  const nextUpcomingMeeting = upcomingEvents[0];
 
-  const handleEventClick = (event: EventWithDetails) => {
-    setSelectedEvent(event);
-  };
-
-  const handleSlotSelect = (slotInfo: { start: Date; end: Date }) => {
-    setPrefilledDate(slotInfo);
+  // Handlers
+  const handleNewMeeting = () => {
     setShowCreateDialog(true);
   };
 
+  const handleJoinMeeting = () => {
+    const link = prompt("Enter meeting invitation link:");
+    if (link) {
+      window.open(link, "_blank");
+    }
+  };
+
+  const handleScheduleMeeting = () => {
+    setShowCreateDialog(true);
+  };
+
+  const handleViewRecordings = () => {
+    setActiveSection("recordings");
+  };
+
+  const handleStartMeeting = (event: EventWithDetails) => {
+    if (event.meetingLink) {
+      window.open(event.meetingLink, "_blank");
+    }
+  };
+
+  const handleDeleteMeeting = async (event: EventWithDetails) => {
+    if (confirm(`Are you sure you want to delete "${event.title}"?`)) {
+      try {
+        const response = await fetch(`/api/events/${event.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete event");
+        }
+
+        toast({
+          title: "Meeting deleted",
+          description: "The meeting has been successfully deleted",
+        });
+
+        // Refresh the events list
+        window.location.reload();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete meeting",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Render content based on active section
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      );
+    }
+
+    switch (activeSection) {
+      case "home":
+        return (
+          <div className="space-y-8">
+            <EventsHero upcomingMeeting={nextUpcomingMeeting} />
+            <EventsActionCards
+              onNewMeeting={handleNewMeeting}
+              onJoinMeeting={handleJoinMeeting}
+              onScheduleMeeting={handleScheduleMeeting}
+              onViewRecordings={handleViewRecordings}
+            />
+            <TodaysMeetings
+              meetings={todaysMeetings}
+              onSeeMore={() => setActiveSection("upcoming")}
+              onStartMeeting={handleStartMeeting}
+              onDeleteMeeting={handleDeleteMeeting}
+              currentUserId={user?.id}
+            />
+          </div>
+        );
+
+      case "upcoming":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Upcoming Meetings</h2>
+              <p className="text-muted-foreground">
+                {upcomingEvents.length} meeting{upcomingEvents.length !== 1 ? "s" : ""} scheduled
+              </p>
+            </div>
+            
+            {upcomingEvents.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <p className="text-lg">No upcoming meetings scheduled</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {upcomingEvents.map((event) => (
+                  <MeetingCard
+                    key={event.id}
+                    event={event}
+                    onStart={handleStartMeeting}
+                    onDelete={handleDeleteMeeting}
+                    currentUserId={user?.id}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case "previous":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Previous Meetings</h2>
+              <p className="text-muted-foreground">
+                {previousEvents.length} past meeting{previousEvents.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+            
+            {previousEvents.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <p className="text-lg">No previous meetings</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {previousEvents.map((event) => (
+                  <MeetingCard
+                    key={event.id}
+                    event={event}
+                    onStart={handleStartMeeting}
+                    onDelete={handleDeleteMeeting}
+                    currentUserId={user?.id}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case "recordings":
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Meeting Recordings</h2>
+              <p className="text-muted-foreground">
+                {recordedEvents.length} recording{recordedEvents.length !== 1 ? "s" : ""} available
+              </p>
+            </div>
+            
+            {recordedEvents.length === 0 ? (
+              <div className="text-center py-20 text-muted-foreground">
+                <p className="text-lg">No recordings available</p>
+                <p className="text-sm mt-2">Recordings will appear here after meetings are recorded</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recordedEvents.map((event) => (
+                  <MeetingCard
+                    key={event.id}
+                    event={event}
+                    variant="recording"
+                    onStart={handleStartMeeting}
+                    currentUserId={user?.id}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-6 dark:bg-slate-950 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage and attend company events, meetings, and training sessions
-            </p>
-          </div>
-          <CreateEventDialog>
-            <Button size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Create Event
-            </Button>
-          </CreateEventDialog>
+    <div className="flex h-screen bg-background dark:bg-slate-950">
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="fixed top-4 left-4 z-50 md:hidden bg-background/80 backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <Menu className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Sidebar */}
+      <EventsSidebar
+        activeSection={activeSection}
+        onSectionChange={(section) => {
+          setActiveSection(section);
+          if (isMobile) {
+            setIsSidebarOpen(false);
+          }
+        }}
+        onCreateMeeting={() => {
+          setShowCreateDialog(true);
+          if (isMobile) {
+            setIsSidebarOpen(false);
+          }
+        }}
+        isOpen={isMobile ? isSidebarOpen : true}
+        onClose={() => setIsSidebarOpen(false)}
+        isMobile={isMobile}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="px-4 md:px-6 py-8 max-w-7xl mx-auto">
+          {renderContent()}
         </div>
+      </main>
 
-        {/* Filters and View Controls */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          {/* View Mode Tabs */}
-          <Tabs
-            value={viewMode}
-            onValueChange={(value) => setViewMode(value as typeof viewMode)}
-            className="flex-1"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="upcoming" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="hidden sm:inline">Upcoming</span>
-              </TabsTrigger>
-              <TabsTrigger value="my-events" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">My Events</span>
-              </TabsTrigger>
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                <List className="h-4 w-4" />
-                <span className="hidden sm:inline">All Events</span>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          {/* Display Mode Toggle */}
-          <div className="flex gap-2">
-            <Button
-              variant={displayMode === "list" ? "default" : "outline"}
-              onClick={() => setDisplayMode("list")}
-              className="flex-1 lg:flex-initial"
-            >
-              <List className="h-4 w-4 mr-2" />
-              List
-            </Button>
-            <Button
-              variant={displayMode === "calendar" ? "default" : "outline"}
-              onClick={() => setDisplayMode("calendar")}
-              className="flex-1 lg:flex-initial"
-            >
-              <Grid className="h-4 w-4 mr-2" />
-              Calendar
-            </Button>
-          </div>
-
-          {/* Event Type Filter */}
-          <Select value={eventTypeFilter} onValueChange={setEventTypeFilter}>
-            <SelectTrigger className="w-full lg:w-[200px]">
-              <SelectValue placeholder="All Event Types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" onClick={() => setEventTypeFilter(undefined)}>
-                All Event Types
-              </SelectItem>
-              <SelectItem value="company_event">Company Event</SelectItem>
-              <SelectItem value="training">Training</SelectItem>
-              <SelectItem value="team_meeting">Team Meeting</SelectItem>
-              <SelectItem value="1on1">1-on-1</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Event Count */}
-        {!isLoading && sortedEvents && displayMode === "list" && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">
-              Showing {sortedEvents.length} event{sortedEvents.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-        )}
-
-        {/* List or Calendar View */}
-        {displayMode === "list" ? (
-          <EventList
-            events={sortedEvents}
-            isLoading={isLoading}
-            onEventClick={handleEventClick}
-            emptyMessage={
-              viewMode === "my-events"
-                ? "You haven't created or been invited to any events yet"
-                : viewMode === "upcoming"
-                ? "No upcoming events scheduled"
-                : "No events found"
-            }
-          />
-        ) : (
-          <EventCalendar
-            events={sortedEvents || []}
-            onSelectEvent={handleEventClick}
-            onSelectSlot={handleSlotSelect}
-          />
-        )}
-
-        {/* Event Details Modal */}
-        <EventDetailsModal
-          event={selectedEvent}
-          open={!!selectedEvent}
-          onOpenChange={(open) => !open && setSelectedEvent(null)}
-          onEdit={() => {
-            // TODO: Implement edit functionality
-            console.log("Edit event:", selectedEvent);
-          }}
-        />
-      </div>
+      {/* Create Meeting Dialog */}
+      <CreateEventDialog
+        isOpen={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+      />
     </div>
   );
 }
