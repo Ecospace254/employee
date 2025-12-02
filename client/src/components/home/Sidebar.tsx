@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar } from "lucide-react";
+import { Plus, Calendar, ExternalLink } from "lucide-react";
 import { SiLinkedin, SiFacebook } from "react-icons/si";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -283,20 +283,12 @@ export default function Sidebar() {
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start text-primary"
-            data-testid="link-linkedin"
+            className="w-full justify-start text-primary hover:bg-primary/10"
+            onClick={() => window.open('http://linktr.ee/EspaceLtd', '_blank')}
+            data-testid="link-linktree"
           >
-            <SiLinkedin className="w-4 h-4 mr-2" />
-            LinkedIn
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-primary"
-            data-testid="link-facebook"
-          >
-            <SiFacebook className="w-4 h-4 mr-2" />
-            Facebook
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Company Links
           </Button>
         </CardContent>
       </Card>
