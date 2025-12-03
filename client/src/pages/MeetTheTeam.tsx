@@ -5,22 +5,81 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Building2, MessageCircle, Eye } from "lucide-react";
+import { Users, Building2, MessageCircle, Eye, Plus, Newspaper, Megaphone, ArrowRight } from "lucide-react";
 import { PublicUser } from "@shared/schema";
 import OrganizationalChart from "@/components/meet-the-team/OrganizationalChart";
 import teamBackground from "@assets/MeetTeamBackground.jpg";
 import { departments } from "@/data/departments";
 import { filterUsersByDepartment, getDepartmentMemberCount, groupUsersByDepartment } from "@/utils/departmentHelpers";
+import CreateAnnouncementModal from "@/components/announcements/CreateAnnouncementModal";
+import { useLocation } from "wouter";
+
+type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  type: 'news' | 'announcement' | 'introduction';
+  imageUrl: string | null;
+  mediaLink: string | null;
+  authorId: string;
+  viewCount: number;
+  likeCount: number;
+  publishedAt: string;
+  metadata: string | null;
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImage: string | null;
+    jobTitle?: string;
+    department?: string;
+  };
+};
 
 export default function MeetTheTeam() {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createType, setCreateType] = useState<'news' | 'announcement' | 'introduction'>('introduction');
+  const [, setLocation] = useLocation();
 
   const { data: teamMembers = [], isLoading } = useQuery<PublicUser[]>({
     queryKey: ["/api/team-members"],
   });
 
+  // Fetch recent introductions
+  const { data: announcements = [] } = useQuery<Announcement[]>({
+    queryKey: ["/api/announcements"],
+    queryFn: async () => {
+      const response = await fetch(`/api/announcements`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to fetch");
+      return response.json();
+    },
+  });
+
+  const recentIntroductions = announcements
+    .filter(a => a.type === 'introduction')
+    .slice(0, 3);
+  const introductionsCount = announcements.filter(a => a.type === 'introduction').length;
+
   // Group members by department
   const membersByDepartment = groupUsersByDepartment(teamMembers);
+
+  // Handler functions
+  const handleCreateIntroduction = () => {
+    setCreateType('introduction');
+    setIsCreateModalOpen(true);
+  };
+
+  const handleViewIntroductions = () => {
+    setLocation('/company-hub?tab=introduction');
+  };
+
+  const handleCreatePost = (type: 'news' | 'announcement') => {
+    setCreateType(type);
+    setIsCreateModalOpen(true);
+  };
 
   const leadership = teamMembers.filter(member => 
     member.role === "hr" || member.jobTitle?.toLowerCase().includes("director") || 
@@ -292,74 +351,213 @@ export default function MeetTheTeam() {
           </TabsContent>
 
           <TabsContent value="introductions" className="space-y-8">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-4">We want to get to know you!</h2>
-                <p className="text-muted-foreground">
-                  Follow the instructions here to make your arrival known in an "About me" news post that 
-                  will be shared with the R&D organization.
+                <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  We want to get to know you!
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Share your story with the team and learn about your colleagues
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Step 1 & 2 */}
-                <Card className="dark:bg-slate-800">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Card 1: View Team Introductions */}
+                <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
-                      Create News Post
+                    <CardTitle className="flex items-center gap-3 text-purple-700 dark:text-purple-300">
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-xl group-hover:scale-110 transition-transform">
+                        <Eye className="w-6 h-6" />
+                      </div>
+                      <span>Browse Introductions</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      On the Home page, in the upper left corner of the command bar, select + New, and select News post.
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Discover your teammates' stories, backgrounds, and fun facts. Get inspired before creating your own!
                     </p>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <div className="bg-primary h-8 w-full rounded mb-2"></div>
+                    
+                    {recentIntroductions.length > 0 && (
                       <div className="space-y-2">
-                        <div className="bg-background h-4 w-3/4 rounded"></div>
-                        <div className="bg-background h-4 w-1/2 rounded"></div>
+                        <p className="text-xs font-semibold text-purple-700 dark:text-purple-300">Recent Introductions:</p>
+                        {recentIntroductions.map((intro) => (
+                          <div key={intro.id} className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg">
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage src={intro.author.profileImage || undefined} />
+                              <AvatarFallback className="text-xs bg-purple-200 dark:bg-purple-800">
+                                {intro.author.firstName[0]}{intro.author.lastName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">
+                                {intro.author.firstName} {intro.author.lastName}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">{intro.title}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
+                    )}
+                    
+                    <div className="pt-2 flex items-center justify-between">
+                      <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                        {introductionsCount} {introductionsCount === 1 ? 'introduction' : 'introductions'}
+                      </Badge>
                     </div>
+                    
+                    <Button 
+                      onClick={handleViewIntroductions}
+                      className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white shadow-lg group-hover:shadow-xl transition-all"
+                    >
+                      View All Introductions
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
                   </CardContent>
                 </Card>
 
-                {/* Step 3 & 4 */}
-                <Card>
+                {/* Card 2: Create Your Introduction */}
+                <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-pink-400 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-950/30 dark:to-purple-950/30">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <span className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
-                      Share Your Story
+                    <CardTitle className="flex items-center gap-3 text-pink-700 dark:text-pink-300">
+                      <div className="p-3 bg-pink-100 dark:bg-pink-900/50 rounded-xl group-hover:scale-110 transition-transform">
+                        <MessageCircle className="w-6 h-6" />
+                      </div>
+                      <span>Your Introduction</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Share a brief introduction, a picture of yourself, and your new role. Save as draft, 
-                      and when you are ready to share, select Post news.
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Share your background, role, interests, and fun facts with the team. Make your arrival known!
                     </p>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <div className="flex gap-4">
-                        <div className="bg-primary w-16 h-16 rounded-full"></div>
-                        <div className="flex-1 space-y-2">
-                          <div className="bg-background h-4 w-full rounded"></div>
-                          <div className="bg-background h-4 w-3/4 rounded"></div>
+                    
+                    <div className="bg-white dark:bg-slate-800 p-4 rounded-lg space-y-3">
+                      <div className="flex items-start gap-2 text-xs">
+                        <div className="w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold shrink-0">1</div>
+                        <p className="text-muted-foreground">Click "Introduce Yourself" below</p>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs">
+                        <div className="w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold shrink-0">2</div>
+                        <p className="text-muted-foreground">Fill in your details and story</p>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs">
+                        <div className="w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold shrink-0">3</div>
+                        <p className="text-muted-foreground">Share fun facts about yourself</p>
+                      </div>
+                      <div className="flex items-start gap-2 text-xs">
+                        <div className="w-5 h-5 rounded-full bg-pink-500 text-white flex items-center justify-center font-bold shrink-0">4</div>
+                        <p className="text-muted-foreground">Post and connect with the team!</p>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleCreateIntroduction}
+                      className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white shadow-lg group-hover:shadow-xl transition-all"
+                      data-testid="button-create-introduction"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Introduce Yourself
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Card 3: Share Company News */}
+                <Card className="group hover:shadow-2xl transition-all duration-300 border-2 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3 text-blue-700 dark:text-blue-300">
+                      <div className="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl group-hover:scale-110 transition-transform">
+                        <Newspaper className="w-6 h-6" />
+                      </div>
+                      <span>Share Updates</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Have news to share or an important announcement? Post it to the Company Hub for everyone to see.
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-lg">
+                        <Newspaper className="w-5 h-5 text-blue-500" />
+                        <div>
+                          <p className="text-sm font-medium">News Posts</p>
+                          <p className="text-xs text-muted-foreground">Company updates & stories</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 p-3 bg-white dark:bg-slate-800 rounded-lg">
+                        <Megaphone className="w-5 h-5 text-teal-500" />
+                        <div>
+                          <p className="text-sm font-medium">Announcements</p>
+                          <p className="text-xs text-muted-foreground">Important team notices</p>
                         </div>
                       </div>
                     </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => handleCreatePost('news')}
+                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                        size="sm"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        News
+                      </Button>
+                      <Button 
+                        onClick={() => handleCreatePost('announcement')}
+                        className="flex-1 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white"
+                        size="sm"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Announce
+                      </Button>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleViewIntroductions}
+                      variant="outline"
+                      className="w-full border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/50"
+                    >
+                      Go to Company Hub
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
                   </CardContent>
                 </Card>
               </div>
 
-              <div className="text-center mt-8">
-                <Button className="gap-2" data-testid="button-create-introduction">
-                  <MessageCircle className="w-4 h-4" />
-                  Create Your Introduction
-                </Button>
-              </div>
+              {/* Info Banner */}
+              <Card className="bg-gradient-to-r from-purple-100 via-pink-100 to-blue-100 dark:from-purple-950/50 dark:via-pink-950/50 dark:to-blue-950/50 border-2 border-purple-300 dark:border-purple-700">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-xl">
+                      <MessageCircle className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Why introduce yourself?</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Your introduction helps teammates get to know you beyond your job title. Share your journey, 
+                        your passions, and what makes you unique. It's a great way to break the ice and start building connections!
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge className="bg-purple-500 hover:bg-purple-600">Build connections</Badge>
+                        <Badge className="bg-pink-500 hover:bg-pink-600">Share your story</Badge>
+                        <Badge className="bg-blue-500 hover:bg-blue-600">Team bonding</Badge>
+                        <Badge className="bg-teal-500 hover:bg-teal-600">Be authentic</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Announcement Modal */}
+      <CreateAnnouncementModal
+        isOpen={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        type={createType}
+      />
     </div>
   );
 }

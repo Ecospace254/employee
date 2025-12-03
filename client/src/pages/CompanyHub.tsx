@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,15 @@ export default function CompanyHub() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check for URL parameters to set active tab
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    if (tab && ['all', 'news', 'announcement', 'introduction'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
 
   // Fetch announcements with optional type filter
   const { data: announcements = [], isLoading } = useQuery<Announcement[]>({
