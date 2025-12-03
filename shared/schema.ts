@@ -51,12 +51,23 @@ export const announcements = pgTable("announcements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  imageUrl: text("image_url"), // Uploaded image URL
-  mediaLink: text("media_link"), // External link (YouTube, blog, etc.)
+  type: text("type").notNull().default("announcement"), // 'news', 'announcement', 'introduction'
+  imageUrl: text("image_url"), // Uploaded image URL (null for introductions - uses profile photo)
+  mediaLink: text("media_link"), // External link (YouTube, blog, course links, etc.)
   authorId: varchar("author_id").references(() => users.id).notNull(), // Reference to user who posted
   viewCount: integer("view_count").default(0), // Track how many people viewed
+  likeCount: integer("like_count").default(0), // Track total likes
   publishedAt: timestamp("published_at").default(sql`now()`),
   targetRole: text("target_role"),
+  metadata: text("metadata"), // JSON for type-specific data (funFacts, hobbies for introductions)
+});
+
+// Announcement likes - track individual user likes
+export const announcementLikes = pgTable("announcement_likes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  announcementId: varchar("announcement_id").references(() => announcements.id, { onDelete: 'cascade' }).notNull(),
+  likedAt: timestamp("liked_at").defaultNow().notNull(),
 });
 
 // Saved announcements - many-to-many relationship between users and announcements

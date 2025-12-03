@@ -614,19 +614,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const announcements = await storage.getAllAnnouncements();
+      const type = req.query.type as string | undefined; // Filter by type: 'news', 'announcement', 'introduction'
+      const announcements = await storage.getAllAnnouncements(type);
       const user = req.user as any;
       
       // Get saved announcements for current user
       const savedIds = await storage.getSavedAnnouncements(user.id);
       
-      // Add isSaved flag to each announcement
-      const announcementsWithSaved = announcements.map(announcement => ({
+      // Get liked announcements for current user
+      const likedIds = await storage.getLikedAnnouncements(user.id);
+      
+      // Add isSaved and isLiked flags to each announcement
+      const announcementsWithFlags = announcements.map(announcement => ({
         ...announcement,
-        isSaved: savedIds.includes(announcement.id)
+        isSaved: savedIds.includes(announcement.id),
+        isLiked: likedIds.includes(announcement.id)
       }));
       
-      res.json(announcementsWithSaved);
+      res.json(announcementsWithFlags);
     } catch (error) {
       console.error("Error fetching announcements:", error);
       res.status(500).json({ error: "Failed to fetch announcements" });
@@ -643,7 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const user = req.user as any;
-      const { title, content, mediaLink } = req.body;
+      const { title, content, mediaLink, type, metadata } = req.body;
 
       if (!title || !content) {
         return res.status(400).json({ error: "Title and content are required" });
@@ -659,10 +664,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newAnnouncement = await storage.createAnnouncement({
         title,
         content,
+        type: type || 'announcement', // Default to 'announcement' if not specified
         imageUrl,
         mediaLink: finalMediaLink,
         authorId: user.id,
-        targetRole: null
+        targetRole: null,
+        metadata: metadata || null
       });
 
       res.status(201).json(newAnnouncement);
@@ -722,6 +729,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error unsaving announcement:", error);
       res.status(500).json({ error: "Failed to unsave announcement" });
+    }
+  });
+
+  /**
+   * LIKE announcement
+   */
+  app.post("/api/announcements/:id/like", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      await storage.likeAnnouncement(user.id, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error liking announcement:", error);
+      res.status(500).json({ error: "Failed to like announcement" });
+    }
+  });
+
+  /**
+   * UNLIKE announcement
+   */
+  app.delete("/api/announcements/:id/like", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    try {
+      const user = req.user as any;
+      await storage.unlikeAnnouncement(user.id, req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error unliking announcement:", error);
+      res.status(500).json({ error: "Failed to unlike announcement" });
     }
   });
 

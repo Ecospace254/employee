@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import managerImage from "@assets/generated_images/Marketing_manager_headshot_78fdbb6a.png";
 import directorImage from "@assets/generated_images/Director_professional_headshot_35910231.png";
-import CreateAnnouncementModal from "@/components/home/CreateAnnouncementModal";
+import CreateAnnouncementModal from "@/components/announcements/CreateAnnouncementModal";
 import { useAuth } from "@/hooks/use-auth";
 import { useUpcomingEvents } from "@/hooks/use-events";
 import { CreateEventDialog } from "@/components/home/events/CreateEventDialog";
@@ -115,9 +115,9 @@ export default function Sidebar() {
       {/* News & Announcements */}
       <Card className="dark:bg-slate-800">
         <CardHeader className="flex flex-row items-center justify-between gap-1 space-y-0 pb-4">
-          <h3 className="text-lg font-semibold" data-testid="text-news-title">News & Announcements</h3>
+          <h3 className="text-lg font-semibold" data-testid="text-news-title">Company Hub</h3>
           <Button
-            onClick={() => setLocation("/news-announcements")}
+            onClick={() => setLocation("/company-hub")}
             variant="ghost"
             size="sm"
             className="h-auto p-1 text-primary text-sm"
@@ -137,10 +137,10 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-medium text-foreground">
-                Create a news post
+                Create a post
               </h4>
               <p className="text-xs text-muted-foreground mt-1">
-                Keep your audience informed
+                Share news, announcements, or introduce yourself
               </p>
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function Sidebar() {
           {latestAnnouncement && (
             <div 
               className="flex gap-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
-              onClick={() => setLocation("/news-announcements")}
+              onClick={() => setLocation("/company-hub")}
             >
               <Avatar className="w-12 h-12 flex-shrink-0">
                 {latestAnnouncement.author.profileImage ? (

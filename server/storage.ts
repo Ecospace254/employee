@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken, type Announcement, type InsertAnnouncement, announcements, type SavedAnnouncement, savedAnnouncements, type Event, type InsertEvent, events, type EventParticipant, type InsertEventParticipant, eventParticipants } from "@shared/schema";
+import { type User, type InsertUser, type ChecklistItem, type InsertChecklistItem, users, checklistItems, passwordResetTokens, type PasswordResetToken, type InsertPasswordResetToken, type Announcement, type InsertAnnouncement, announcements, type SavedAnnouncement, savedAnnouncements, announcementLikes, type Event, type InsertEvent, events, type EventParticipant, type InsertEventParticipant, eventParticipants } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { db } from "./db";
@@ -29,7 +29,7 @@ export interface IStorage {
   updateUserPassword(userId: string, newPassword: string): Promise<void>;
   verifyUserPassword(userId: string, password: string): Promise<boolean>;
   // Announcement methods
-  getAllAnnouncements(): Promise<(Announcement & { author: User })[]>;
+  getAllAnnouncements(type?: string): Promise<(Announcement & { author: User })[]>;
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
   deleteAnnouncement(id: string, userId: string): Promise<boolean>;
   incrementAnnouncementViews(id: string): Promise<void>;
@@ -37,6 +37,9 @@ export interface IStorage {
   unsaveAnnouncement(userId: string, announcementId: string): Promise<boolean>;
   isAnnouncementSaved(userId: string, announcementId: string): Promise<boolean>;
   getSavedAnnouncements(userId: string): Promise<string[]>;
+  likeAnnouncement(userId: string, announcementId: string): Promise<void>;
+  unlikeAnnouncement(userId: string, announcementId: string): Promise<void>;
+  getLikedAnnouncements(userId: string): Promise<string[]>;
   // Event methods
   getEvents(filters?: { eventType?: string; startDate?: string; endDate?: string; userId?: string }): Promise<(Event & { organizer: User; participantCount?: number })[]>;
   getEventById(id: string): Promise<(Event & { organizer: User; participants: (EventParticipant & { user: User })[] }) | undefined>;
@@ -300,13 +303,20 @@ export class DatabaseStorage implements IStorage {
   /**
    * Get all announcements with author information
    * Joins with users table to get author details (name, image)
+   * Optional filter by type
    */
-  async getAllAnnouncements(): Promise<(Announcement & { author: User })[]> {
-    const result = await db
+  async getAllAnnouncements(type?: string): Promise<(Announcement & { author: User })[]> {
+    let query = db
       .select()
       .from(announcements)
-      .leftJoin(users, eq(announcements.authorId, users.id))
-      .orderBy(desc(announcements.publishedAt));
+      .leftJoin(users, eq(announcements.authorId, users.id));
+
+    // Apply type filter if provided
+    if (type && (type === 'news' || type === 'announcement' || type === 'introduction')) {
+      query = query.where(eq(announcements.type, type)) as any;
+    }
+
+    const result = await query.orderBy(desc(announcements.publishedAt));
 
     return result.map((row) => ({
       ...row.announcements,
@@ -348,6 +358,11 @@ export class DatabaseStorage implements IStorage {
     await db
       .delete(savedAnnouncements)
       .where(eq(savedAnnouncements.announcementId, id));
+
+    // Delete associated likes (foreign key constraint)
+    await db
+      .delete(announcementLikes)
+      .where(eq(announcementLikes.announcementId, id));
 
     // Delete the announcement
     const result = await db
@@ -421,6 +436,60 @@ export class DatabaseStorage implements IStorage {
       .from(savedAnnouncements)
       .where(eq(savedAnnouncements.userId, userId));
     return saved.map((s) => s.announcementId);
+  }
+
+  /**
+   * Like an announcement
+   */
+  async likeAnnouncement(userId: string, announcementId: string): Promise<void> {
+    // Insert like record (will fail silently if already liked due to UNIQUE constraint)
+    try {
+      await db
+        .insert(announcementLikes)
+        .values({ userId, announcementId });
+
+      // Increment like count
+      await db
+        .update(announcements)
+        .set({ likeCount: sql`${announcements.likeCount} + 1` })
+        .where(eq(announcements.id, announcementId));
+    } catch (error) {
+      // Already liked, ignore
+    }
+  }
+
+  /**
+   * Unlike an announcement
+   */
+  async unlikeAnnouncement(userId: string, announcementId: string): Promise<void> {
+    const result = await db
+      .delete(announcementLikes)
+      .where(
+        and(
+          eq(announcementLikes.userId, userId),
+          eq(announcementLikes.announcementId, announcementId)
+        )
+      );
+
+    // Decrement like count if a row was deleted
+    if (result.rowCount && result.rowCount > 0) {
+      await db
+        .update(announcements)
+        .set({ likeCount: sql`GREATEST(${announcements.likeCount} - 1, 0)` }) // Don't go below 0
+        .where(eq(announcements.id, announcementId));
+    }
+  }
+
+  /**
+   * Get all liked announcement IDs for a user
+   * Returns array of announcement IDs
+   */
+  async getLikedAnnouncements(userId: string): Promise<string[]> {
+    const liked = await db
+      .select({ announcementId: announcementLikes.announcementId })
+      .from(announcementLikes)
+      .where(eq(announcementLikes.userId, userId));
+    return liked.map((l) => l.announcementId);
   }
 
   // ============================================
