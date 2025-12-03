@@ -125,39 +125,40 @@ export default function MeetTheTeam() {
 </div>
 
       {/* Leadership Message Section */}
-      <div className="bg-primary dark:bg-slate-800 py-8 sm:py-12 lg:py-16">
+      <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 dark:bg-gradient-to-br dark:from-blue-900 dark:via-blue-950 dark:to-slate-900 py-6 sm:py-8 lg:py-10">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="text-primary-foreground">
-                <div className="space-y-4 text-primary-foreground/90 mb-4">
-                  <p className="text-justify text-xl leading-relaxed">
-                    It's my pleasure to extend a warm welcome to each of you as you prepare to join Ecospace 
-                    Services Ltd. This is an environment where we value empowering our employees to make an impact.
-                  </p>
-                  
-                  <p className="text-justify text-xl leading-relaxed">
-                    Use this opportunity to pursue whatever drives your passion. We continue to grow as a 
-                    company and attract new customers due to our ability to listen, pivot, and explore new solutions.
-                  </p>
-                </div>
-                <blockquote className="text-lg italic leading-relaxed mb-4">
-                  "The world changes when we change our perspective."
-                </blockquote>
-                
-              </div>
+          <div className="max-w-4xl mx-auto">
+            {/* Director Photo and Name */}
+            <div className="text-center mb-8">
+              <Avatar className="w-40 h-40 mx-auto mb-6 shadow-2xl ring-4 ring-white/20">
+                <AvatarFallback className="text-4xl bg-white text-blue-700 font-bold">
+                  FA
+                </AvatarFallback>
+              </Avatar>
+              <h3 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Fred Awiti</h3>
+              <p className="text-lg text-blue-100">Managing Director</p>
+            </div>
+
+            {/* Welcome Message */}
+            <div className="space-y-6 text-white">
+              <p className="text-lg leading-relaxed text-center text-white/95">
+                It's my pleasure to extend a warm welcome to each of you as you prepare to join Ecospace 
+                Services Ltd. This is an environment where we value empowering our employees to make an impact.
+              </p>
               
-              <div className="flex justify-center">
-                <Card className="h-full dark:bg-slate-800">
-                  <CardContent className="p-16 text-center">
-                    <Avatar className="w-32 h-32 mx-auto mb-4">
-                      <AvatarFallback className="text-2xl bg-primary-foreground/10">
-                        FA
-                      </AvatarFallback>
-                    </Avatar>
-                    <h4 className="font-semibold text-lg">Fred Awiti, MD</h4>
-                  </CardContent>
-                </Card>
+              <p className="text-lg leading-relaxed text-center text-white/95">
+                Use this opportunity to pursue whatever drives your passion. We continue to grow as a 
+                company and attract new customers due to our ability to listen, pivot, and explore new solutions.
+              </p>
+
+              {/* Quote Section */}
+              <div className="mt-8 pt-8 border-t border-white/20">
+                <blockquote className="relative">
+                  <div className="absolute -left-2 top-0 text-6xl text-white/10 font-serif">"</div>
+                  <p className="text-xl sm:text-2xl italic text-center font-medium text-white px-8">
+                    The world changes when we change our perspective.
+                  </p>
+                </blockquote>
               </div>
             </div>
           </div>
